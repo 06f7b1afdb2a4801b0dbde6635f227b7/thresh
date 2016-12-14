@@ -8,7 +8,6 @@ probably don't need any checking.
 import sys
 import pathlib
 import numpy as np
-from collections import OrderedDict
 import pytest
 
 
@@ -24,6 +23,13 @@ except ImportError:
 def test_absolute_truth():
     """Ensure that the testing library is working."""
     assert True
+
+def test_capture_output(capsys):
+    """Test that the capturing of stdout works."""
+    print("hello world")
+    out, err = capsys.readouterr()
+    assert out == "hello world\n"
+    assert err == ""
 
 
 def test_require_python3():
@@ -47,17 +53,17 @@ def test_initialize():
 
 def test_initialize_ThreshFile_no_alias(content_1):
     """ Do a basic initialization of a ThreshFile without an alias. """
-    tf = thresh.ThreshFile(content=content_1)
-    assert tf.alias == None
-    assert tf.content == content_1
+    threshfile = thresh.ThreshFile(content=content_1)
+    assert threshfile.alias is None
+    assert threshfile.content == content_1
 
 
 def test_initialize_ThreshFile_with_alias(content_1):
     """ Do a basic initialization of a ThreshFile. """
     alias = "A"
-    tf = thresh.ThreshFile(content=content_1, alias=alias)
-    assert tf.alias == alias
-    assert tf.content == content_1
+    threshfile = thresh.ThreshFile(content=content_1, alias=alias)
+    assert threshfile.alias == alias
+    assert threshfile.content == content_1
 
 
 def test_initialize_ThreshFile_with_bad_alias(content_1):
@@ -85,3 +91,21 @@ def test_initialize_ThreshFile_with_bad_content_3(content_1):
     content_1['a'] = np.append(content_1['a'], content_1['a'])
     with pytest.raises(IndexError):
         thresh.ThreshFile(content=content_1)
+
+#
+#  ThreshFile.list_headers()
+#
+
+def test_list_headers_no_alias(capsys, threshfile_2):
+    """ Check the default behavior of the list_headers() function. """
+    threshfile_2.list_headers()
+    out, err = capsys.readouterr()
+    assert out == "  1 time\n  2 strain\n  3 stress\n"
+    assert err == ""
+
+def test_list_headers_with_alias(capsys, threshfile_2):
+    """ Check the non-default behavior of the list_headers() function. """
+    threshfile_2.list_headers(print_alias=True)
+    out, err = capsys.readouterr()
+    assert out == "==> threshfile_2 <==\n  1 time\n  2 strain\n  3 stress\n"
+    assert err == ""

@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
-import numpy as np
-from collections import OrderedDict
 """
 The init file for the 'thresh' library.
 """
+from collections import OrderedDict
+import numpy as np
 
 __version__ = (0, 0, 1)
 
 
 class ThreshFile:
+    """
+    The basic representation of tabular files.
+    """
 
     def __init__(self, *, content, alias=None):
         """
@@ -25,17 +28,17 @@ class ThreshFile:
         """
 
         # Process 'alias'
-        if type(alias) is not str and alias is not None:
+        if not isinstance(alias, str) and alias is not None:
             raise TypeError("Variable 'alias' is not of type str or None: {0}"
                             .format(type(alias)))
         self.alias = alias
 
         # Consistency checks on variable 'content'
-        if type(content) is not OrderedDict:
+        if not isinstance(content, OrderedDict):
             raise TypeError("Variable 'content' is not an OrderedDict: {0}"
                             .format(repr(content)))
 
-        if not all([type(_) is str for _ in content.keys()]):
+        if not all([isinstance(_, str) for _ in content.keys()]):
             raise KeyError("Variable 'content' has non-string key(s): {0}"
                            .format(list(content.keys())))
 
@@ -44,6 +47,18 @@ class ThreshFile:
                              .format([len(_) for _ in content.values()]))
 
         self.content = content
+
+    def list_headers(self, *, print_alias=False):
+        """
+        Print the list of headers and the header index of the ThreshFile. The
+        header index starts at 1, not 0.
+        """
+        if print_alias:
+            print("==> {0} <==".format(self.alias))
+
+        for idx, key in enumerate(self.content.keys()):
+            print("{0: 3d} {1:s}".format(idx+1, key))
+
 
 #import pathlib
 #    @classmethod

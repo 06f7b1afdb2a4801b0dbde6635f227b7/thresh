@@ -11,22 +11,22 @@ The most basic functionality for _thresh_ is listing column headers and splittin
 
 ```bash
 $ thresh column_data_1.txt list
-1 time
-2 strain
-3 stress
+  1 time
+  2 strain
+  3 stress
 ```
 
 ```bash
 $ thresh column_data_1.txt column_data_2.txt list
 ==> column_data_1.txt <==
-1 time
-2 strain
-3 stress
+  1 time
+  2 strain
+  3 stress
 
 ==> column_data_2.txt <==
-1 time
-2 density
-3 pressure
+  1 time
+  2 density
+  3 pressure
 ```
 
 ### Splitting Files into Many Single-Column Files
