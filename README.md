@@ -7,7 +7,7 @@ Examples of possible operations are: extracting a single column from a file, mer
 
 ## Usage Examples
 
-The most basic functionality for _thresh_ is listing column headers and splitting files.
+The most basic functionality for _thresh_ is listing column headers and splitting files, as stated above.
 
 ### Listing Column Headers
 
