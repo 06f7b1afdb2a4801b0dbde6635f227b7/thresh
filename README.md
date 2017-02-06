@@ -2,6 +2,8 @@
 
 The _thresh_ module is meant primarily as a python module for a command-line tool for manipulating files containing data in columns.
 
+Examples of possible operations are: extracting a single column from a file, merging two files with columns, shifting or scaling a column.
+
 
 ## Usage Examples
 
