@@ -2,6 +2,7 @@
 """
 The init file for the 'thresh' library.
 """
+import pathlib
 from collections import OrderedDict
 import numpy as np
 
@@ -46,7 +47,8 @@ class ThreshFile:
             raise IndexError("arrays in 'content' have varying lengths: {0}"
                              .format([len(_) for _ in content.values()]))
 
-        self.content = content
+        self.content = OrderedDict(content.items())
+
 
     def list_headers(self, *, print_alias=False):
         """
@@ -60,31 +62,42 @@ class ThreshFile:
             print("{0: 3d} {1:s}".format(idx+1, key))
 
 
-#import pathlib
-#    @classmethod
-#    def from_file(cls, *, filename):
-#
-#        if type(filename) == str:
-#            # Do something
-#            str_filename = filename
-#        elif type(filename) in [pathlib.PosixPath, pathlib.WindowsPath]:
-#            # Do something
-#            str_filename = str(filename)
-#        else:
-#            # Unknown input. Raise exception.
-#            raise TypeError("Unrecognized input: {0}".format(repr(filename)))
-#
-#        # Either comma or whitespace delimited
-#        delimiter = ',' if str_filename[-4:].lower() == ".csv" else None
-#
-#        # Read the headers
-#        with open(str_filename, 'r') as F:
-#            head = F.readline.rstrip().split(delimiter)
-#
-#        # Read the data
-#        data = np.loadtxt(str_filename, skiprows=1, unpack=True, delimiter=delimiter)
-#
-#        # Put it together
-#        content = OrderedDict(zip(head, data))
-#
-#        return cls(content=content)
+    @classmethod
+    def from_file(cls, filename, alias=None):
+        """
+        Read in a text-delimited or comma-delimited text file
+        and return the corresponding ThreshFile object.
+        """
+
+        # Convert the filename to a string
+        if isinstance(filename, str):
+            str_filename = filename
+        elif (isinstance(filename, pathlib.PosixPath) or
+              isinstance(filename, pathlib.WindowsPath)):
+            str_filename = str(filename)
+        else:
+            # Unknown input. Raise exception.
+            raise TypeError("Unrecognized input: {0}".format(repr(filename)))
+
+        # Set the alias to the filename if it is not given
+        alias = str_filename if alias is None else str(alias)
+
+        # If .csv then comma-separated, otherwise whitespace-delimited
+        delimiter = ',' if str_filename[-4:].lower() == ".csv" else None
+
+        # Read the headers (first line)
+        with open(str_filename, 'r') as fobj:
+            head = fobj.readline().rstrip().split(delimiter)
+
+        # Verify that all headers are unique
+        if len(head) != len(set(head)):
+            raise KeyError("Non-unique headers detected in " + str_filename)
+
+        # Read the data
+        data = np.loadtxt(str_filename, skiprows=1,
+                          unpack=True, delimiter=delimiter)
+
+        # Put it together
+        content = OrderedDict(zip(head, data))
+
+        return cls(content=content, alias=alias)

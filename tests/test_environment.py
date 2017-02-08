@@ -6,9 +6,11 @@ probably don't need any checking.
 """
 
 import sys
+import itertools
 import pathlib
 import numpy as np
 import pytest
+import basic_files
 
 
 # Ensure that 'thresh' is imported from parent directory.
@@ -109,3 +111,41 @@ def test_list_headers_with_alias(capsys, threshfile_2):
     out, err = capsys.readouterr()
     assert out == "==> threshfile_2 <==\n  1 time\n  2 strain\n  3 stress\n"
     assert err == ""
+
+#
+#  ThreshFile.from_file()
+#
+
+def test_from_file_string(thresh_files):
+    """ Check that the ThreshFile.from_file() function behaves properly. """
+
+    for thresh_file, dopath in itertools.product(thresh_files.values(), [True, False]):
+
+        if not thresh_file.name.startswith("pass_"):
+            continue
+        solution_content = basic_files.base_files[thresh_file.name][1]
+
+        # Do every test with pathlib and without
+        file_obj = pathlib.Path(thresh_file) if dopath else thresh_file
+
+        tf_obj = thresh.ThreshFile.from_file(file_obj)
+        for key in tf_obj.content:
+            assert np.allclose(tf_obj.content[key], solution_content[key],
+                               atol=1.0e-12, rtol=1.0e-12)
+
+def test_from_file_fail_nonunique_headers(thresh_files):
+    """ Test the ThreshFile.from_file() for non-unique headers. """
+    filename = thresh_files["fail_nonunique_headers.txt"]
+    with pytest.raises(KeyError):
+        thresh.ThreshFile.from_file(filename)
+
+def test_from_file_fail_unknown_filename_input():
+    """ Test the ThreshFile.from_file() for unknown filename input. """
+    with pytest.raises(TypeError):
+        thresh.ThreshFile.from_file(lambda x: x+1)
+
+def test_from_file_fail_file_not_found():
+    """ Test the ThreshFile.from_file() for nonexistant files. """
+
+    with pytest.raises(FileNotFoundError):
+        thresh.ThreshFile.from_file("c75fc775d1439c3f3d9212d5c813b594.txt")
