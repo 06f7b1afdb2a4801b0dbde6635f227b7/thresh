@@ -101,3 +101,58 @@ class ThreshFile:
         content = OrderedDict(zip(head, data))
 
         return cls(content=content, alias=alias)
+
+
+def parse_args(args_in):
+    """
+    This parses the command-line inputs and organizes it in the following
+    manner to be returned:
+
+    1) list of filename to be read in
+    2) a token specifying the task to be done with the files. Currently,
+       the only tokens recognized are:
+       * "list"  --> list headers
+       * "cat"   --> cat together and output
+       * "burst" --> split each column into its own file
+    """
+
+    # Make a copy of the input args
+    args = [_ for _ in args_in]
+
+    # Check if help is requested:
+    if len(args) == 0 or "-h" in args or "--help" in args:
+        return [], "help"
+
+    files_to_be_read = []
+    task = None
+    while len(args) > 0:
+
+        # Extract the argument
+        arg = args.pop(0)
+
+        if task is None:
+            # Only files or the task can be defined while task is None
+            if arg.lower() in ["list", "cat", "burst"]:
+                task = arg.lower()
+                break
+            elif pathlib.Path(arg).is_file():
+                files_to_be_read.append(arg)
+            else:
+                raise FileNotFoundError("File not found: " + arg)
+        else:
+            # Nothing should exist after the task (until it is implemented)
+            break
+
+    # If no files were defined
+    if len(files_to_be_read) == 0:
+        raise Exception("No files given to process.")
+
+    # If no task was requested
+    if task is None:
+        raise Exception("No task requested.")
+
+    # If all the args were not processed
+    if len(args) > 0:
+        raise Exception("Unused arguments following '{0}'.".format(task))
+
+    return files_to_be_read, task
