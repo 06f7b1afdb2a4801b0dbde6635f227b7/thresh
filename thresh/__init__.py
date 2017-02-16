@@ -50,7 +50,7 @@ class ThreshFile:
         self.content = OrderedDict(content.items())
 
 
-    def list_headers(self, *, print_alias=False):
+    def list_headers(self, *, print_alias=True):
         """
         Print the list of headers and the header index of the ThreshFile. The
         header index starts at 1, not 0.
@@ -60,6 +60,30 @@ class ThreshFile:
 
         for idx, key in enumerate(self.content.keys()):
             print("{0: 3d} {1:s}".format(idx+1, key))
+
+
+    def as_text(self, *, delimiter=""):
+        """
+        Compile the contents of the ThreshFile and return as
+        text. This allows easy uniform printing to the terminal
+        or to a file.
+        """
+        n_chars_per_column = 23
+        n_chars_decimal = n_chars_per_column - 9
+        strfmt = "{0:>" + str(n_chars_per_column) + "s}"
+        fltfmt = ("{0:+" + str(n_chars_per_column) +
+                  "." + str(n_chars_decimal) + "e}")
+
+        lines = []
+        # Format the headers.
+        lines.append(delimiter.join(strfmt.format(_) for _ in self.content))
+
+        # Format the data lines
+        keys = list(self.content.keys())
+        for idx in range(len(self.content[keys[0]])):
+            lines.append(delimiter.join(fltfmt.format(self.content[_][idx]) for _ in keys))
+
+        return "\n".join(lines)
 
 
     @classmethod
@@ -156,3 +180,29 @@ def parse_args(args_in):
         raise Exception("Unused arguments following '{0}'.".format(task))
 
     return files_to_be_read, task
+
+
+def main(args):
+    """
+    This is the main function which takes the command-line arguments and
+    does all the work.
+    """
+
+    # Parse the given arguments.
+    files_to_be_read, task = parse_args(args)
+
+    # Read in the files and store them.
+    list_of_data = [ThreshFile.from_file(_) for _ in files_to_be_read]
+
+    # Perform the desired task.
+    if task == 'list':
+        for obj in list_of_data:
+            obj.list_headers()
+    elif task == 'cat':
+        raise NotImplementedError("'cat' not implemented.")
+    elif task == 'burst':
+        raise NotImplementedError("'burst' not implemented.")
+    else:
+        raise Exception("Task not recognized: '{0}'.".format(task))
+    
+

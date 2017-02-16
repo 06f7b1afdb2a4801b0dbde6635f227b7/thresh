@@ -13,6 +13,7 @@ The most basic functionality for _thresh_ is listing column headers and splittin
 
 ```bash
 $ thresh column_data_1.txt list
+==> column_data_1.txt <==
   1 time
   2 strain
   3 stress
@@ -35,9 +36,9 @@ $ thresh column_data_1.txt column_data_2.txt list
 
 ```bash
 $ thresh column_data_1.txt burst
-Created time.txt
-Created strain.txt
-Created stress.txt
+Created column_data_1_time.txt
+Created column_data_1_strain.txt
+Created column_data_1_stress.txt
 ```
 
 ```bash

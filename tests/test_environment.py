@@ -98,9 +98,16 @@ def test_initialize_ThreshFile_with_bad_content_3(content_1):
 #  ThreshFile.list_headers()
 #
 
-def test_list_headers_no_alias(capsys, threshfile_2):
+def test_list_headers_default(capsys, threshfile_2):
     """ Check the default behavior of the list_headers() function. """
     threshfile_2.list_headers()
+    out, err = capsys.readouterr()
+    assert out == "==> threshfile_2 <==\n  1 time\n  2 strain\n  3 stress\n"
+    assert err == ""
+
+def test_list_headers_no_alias(capsys, threshfile_2):
+    """ Check the non-default behavior of the list_headers() function. """
+    threshfile_2.list_headers(print_alias=False)
     out, err = capsys.readouterr()
     assert out == "  1 time\n  2 strain\n  3 stress\n"
     assert err == ""
@@ -111,6 +118,24 @@ def test_list_headers_with_alias(capsys, threshfile_2):
     out, err = capsys.readouterr()
     assert out == "==> threshfile_2 <==\n  1 time\n  2 strain\n  3 stress\n"
     assert err == ""
+
+#
+#  ThreshFile.as_text()
+#
+def test_as_text_default(threshfile_3):
+    """ Verifies the conversion to text with default delimiter. """
+    txt = threshfile_3.as_text()
+    assert txt == '                   var1                   var2\n  +1.57079632679490e+00  +1.11111111111111e-01\n  +3.14159265358979e+00  +2.22222222222222e-01\n  +4.71238898038469e+00  +3.33333333333333e-01'
+
+def test_as_text_whitespace_delimiter(threshfile_3):
+    """ Verifies the conversion to text with whitespace delimiter. """
+    txt = threshfile_3.as_text(delimiter='')
+    assert txt == '                   var1                   var2\n  +1.57079632679490e+00  +1.11111111111111e-01\n  +3.14159265358979e+00  +2.22222222222222e-01\n  +4.71238898038469e+00  +3.33333333333333e-01'
+
+def test_as_text_comma_delimiter(threshfile_3):
+    """ Verifies the conversion to text with comma delimiter. """
+    txt = threshfile_3.as_text(delimiter=',')
+    assert txt == '                   var1,                   var2\n  +1.57079632679490e+00,  +1.11111111111111e-01\n  +3.14159265358979e+00,  +2.22222222222222e-01\n  +4.71238898038469e+00,  +3.33333333333333e-01'
 
 #
 #  ThreshFile.from_file()

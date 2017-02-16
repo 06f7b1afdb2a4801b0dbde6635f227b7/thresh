@@ -31,6 +31,7 @@ def content_1():
         ('c', np.array([1.4, 2.3, 3.2, 4.1])),
         ))
 
+
 @pytest.fixture
 def content_2():
     """ Sample content, version 2. """
@@ -40,10 +41,33 @@ def content_2():
         ('stress', np.array([0.0, 2.0, 3.0, 3.0])),
         ))
 
+
+@pytest.fixture
+def content_3():
+    """ Sample content, version 3. """
+    return OrderedDict((
+        ('var1', np.array([0.5, 1.0, 1.5]) * np.pi),
+        ('var2', np.array([1.0, 2.0, 3.0]) / 9.0),
+        ))
+
+
+@pytest.fixture
+def threshfile_1():
+    """ A ThreshFile object built on 'content_1'. """
+    return thresh.ThreshFile(content=content_1(), alias="threshfile_1")
+
+
 @pytest.fixture
 def threshfile_2():
     """ A ThreshFile object built on 'content_2'. """
     return thresh.ThreshFile(content=content_2(), alias="threshfile_2")
+
+
+@pytest.fixture
+def threshfile_3():
+    """ A ThreshFile object built on 'content_3'. """
+    return thresh.ThreshFile(content=content_3(), alias="threshfile_3")
+
 
 @pytest.fixture
 def thresh_files(tmpdir_factory):
