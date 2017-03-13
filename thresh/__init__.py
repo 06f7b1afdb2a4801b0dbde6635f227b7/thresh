@@ -148,24 +148,27 @@ def parse_args(args_in):
         return [], "help"
 
     files_to_be_read = []
+    task_specific_args = []
     task = None
     while len(args) > 0:
 
         # Extract the argument
         arg = args.pop(0)
 
-        if task is None:
-            # Only files or the task can be defined while task is None
-            if arg.lower() in ["list", "cat", "burst"]:
-                task = arg.lower()
-                break
-            elif pathlib.Path(arg).is_file():
-                files_to_be_read.append(arg)
-            else:
-                raise FileNotFoundError("File not found: " + arg)
-        else:
-            # Nothing should exist after the task (until it is implemented)
+        # Only files or the task can be defined while task is None
+        if arg.lower() in ["list", "cat", "burst"]:
+            task = arg.lower()
             break
+        elif pathlib.Path(arg).is_file():
+            #                        name alias
+            files_to_be_read.append([arg, None])
+        elif (arg[0].isalpha() and
+              arg[1] == "=" and
+              pathlib.Path(arg[2:]).is_file()):
+            #                        name     alias
+            files_to_be_read.append([arg[2:], arg[0]])
+        else:
+            raise FileNotFoundError("File not found: " + arg)
 
     # If no files were defined
     if len(files_to_be_read) == 0:
@@ -175,11 +178,10 @@ def parse_args(args_in):
     if task is None:
         raise Exception("No task requested.")
 
-    # If all the args were not processed
-    if len(args) > 0:
-        raise Exception("Unused arguments following '{0}'.".format(task))
+    # If all the args were not processed, pass them out
+    task_specific_args = args
 
-    return files_to_be_read, task
+    return files_to_be_read, task, task_specific_args
 
 
 def main(args):
@@ -189,20 +191,21 @@ def main(args):
     """
 
     # Parse the given arguments.
-    files_to_be_read, task = parse_args(args)
+    files_to_be_read, task, task_specific_args = parse_args(args)
 
     # Read in the files and store them.
-    list_of_data = [ThreshFile.from_file(_) for _ in files_to_be_read]
+    list_of_data = [ThreshFile.from_file(filename, alias=alias)
+                    for filename, alias in files_to_be_read]
 
     # Perform the desired task.
     if task == 'list':
         for obj in list_of_data:
             obj.list_headers()
     elif task == 'cat':
+        print(list_of_data)
+        print(task_specific_args)
         raise NotImplementedError("'cat' not implemented.")
     elif task == 'burst':
         raise NotImplementedError("'burst' not implemented.")
     else:
         raise Exception("Task not recognized: '{0}'.".format(task))
-    
-

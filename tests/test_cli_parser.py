@@ -20,14 +20,46 @@ import thresh
 
 @pytest.mark.parametrize('task', ['list', 'cat', 'burst'])
 def test_parse_args(thresh_files, task):
-    """ Check that the parse_args() function behaves properly. """
+    """ Check that the parse_args() function behaves properly without aliases. """
 
     args = [str(val) for key, val in thresh_files.items()] + [task,]
 
-    files_to_be_read_out, task_out = thresh.parse_args(args)
+    files_to_be_read_out, task_out, task_specific_args = thresh.parse_args(args)
+
+    # This contains the filename and alias:
+    #   files_to_be_read_out = [["filename.txt", "a"],
+    #                           ["file2.txt", None]]
 
     assert task_out == task
-    assert files_to_be_read_out == args[:-1]
+    assert [_[0] for _ in files_to_be_read_out] == args[:-1]
+    assert len(task_specific_args) == 0
+
+
+@pytest.mark.parametrize('task', ['list', 'cat', 'burst'])
+def test_parse_args_with_alias(thresh_files, task):
+    """
+    Check that the parse_args() function behaves properly with aliases.
+    We're trying to check that we can pass args like
+      A=pass_a.txt pass_b.txt z=pass_c.csv
+    and get it parsed correctly.
+    """
+
+    files = [str(val) for key, val in thresh_files.items()]
+    args = [_ for _ in files] + [task,]
+    args[0] = "A=" + args[0]
+    args[2] = "z=" + args[2]
+
+    solution = [[_, None] for _ in files]
+    solution[0][1] = "A"
+    solution[2][1] = "z"
+
+    files_to_be_read_out, task_out, task_specific_args = thresh.parse_args(args)
+
+    assert task_out == task
+    assert len(solution) == len(files_to_be_read_out)
+    for idx in range(len(solution)):
+        assert solution[idx] == files_to_be_read_out[idx]
+    assert len(task_specific_args) == 0
 
 
 @pytest.mark.parametrize('args', [[], ['-h'], ['--help']])
@@ -71,9 +103,9 @@ def test_parse_args_fail_no_task(thresh_files):
 
 
 @pytest.mark.parametrize('task', ['list', 'cat', 'burst'])
-def test_parse_args_fail_unused_arguments(task, thresh_files):
+def test_parse_args_gather_unused_arguments(task, thresh_files):
     """
-    Check that the parse_args() fails when unused arguments are given.
+    Check that the parse_args() correctly passes out unused arguments.
     """
 
     args = [str(val) for key, val in thresh_files.items()] + [task,]
@@ -81,5 +113,5 @@ def test_parse_args_fail_unused_arguments(task, thresh_files):
     # Add something valid to the end to get an unused argument
     args = args + random.sample(args, 1)
 
-    with pytest.raises(Exception):
-        thresh.parse_args(args)
+    files, task, task_specific_args = thresh.parse_args(args)
+    assert args[-1] == task_specific_args[0]

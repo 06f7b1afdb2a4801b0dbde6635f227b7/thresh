@@ -49,7 +49,7 @@ exact and unique):
   two files with the same alias is not allowed.
 * If the column descriptor exactly matches one column header, insert
   column. If more than one match, it's an error.
-* Check for valid alias "A@colname" at start of descriptor. If valid
+* Check for valid alias+name "Acolname" at start of descriptor. If valid
   interpret as that column.
 
 ### Extracting Columns
@@ -60,8 +60,8 @@ $ thresh data_1.txt cat time strain stress
 $ thresh data_1.txt cat
 $ thresh A=data_1.txt cat
 $ thresh A=data_1.txt cat A
-$ thresh A=data_1.txt cat A@time A@strain A@stress
-$ thresh A=data_1.txt cat A@time strain stress
+$ thresh A=data_1.txt cat Atime Astrain Astress
+$ thresh A=data_1.txt cat Atime strain stress
 
 # These are equivalent
 $ thresh data_1.txt data_2.txt cat
@@ -69,22 +69,20 @@ $ thresh A=data_1.txt B=data_2.txt cat
 $ thresh A=data_1.txt B=data_2.txt cat A B
 
 # These are equivalent
-$ thresh data_1.txt cat time
-$ thresh A=data_1.txt cat A@time
-
-# These are equivalent
 $ thresh A=data_1.txt data_2.txt cat A density
 $ thresh A=data_1.txt B=data_2.txt cat A density
-$ thresh A=data_1.txt B=data_2.txt cat A B@density
-$ thresh A=data_1.txt B=data_2.txt cat A@time A@strain A@stress B@density
-$ thresh A=data_1.txt data_2.txt cat A@time strain stress density
+$ thresh A=data_1.txt B=data_2.txt cat A Bdensity
+$ thresh A=data_1.txt B=data_2.txt cat Atime Astrain Astress Bdensity
+$ thresh A=data_1.txt data_2.txt cat Atime strain stress density
 ```
 
 ### Manipulating Columns
 ```bash
-# create a new column called 'mtime' which is milliseconds
-$ thresh A=data_1.txt cat A@time=1000*A@time
-
+# create a new column called 'mtime' which is milliseconds (all equivalent)
+$ thresh data_1.txt cat time=1000*time
+$ thresh data_1.txt cat time=1000*Atime
+$ thresh data_1.txt cat Atime=1000*time
+$ thresh A=data_1.txt cat Atime=1000*Atime
 ```
 
 ### Splitting Files into Many Single-Column Files
