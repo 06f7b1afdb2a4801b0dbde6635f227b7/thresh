@@ -14,7 +14,7 @@ class ThreshFile:
     The basic representation of tabular files.
     """
 
-    def __init__(self, *, content, alias=None):
+    def __init__(self, *, content=None, alias=None):
         """
         A file, as represented in thresh, requires only two descriptors, the
         alias and the data itself. As the data has headers and columns it only
@@ -25,25 +25,31 @@ class ThreshFile:
                        ('Column1', np.array([ 0.0, 1.0, 2.0])),
                        ('Column2', np.array([ 1.2, 1.1, 1.0])),
                        ('Column3', np.array([-3.0, 1.4, 1.5])),
-                                   ))
+                                   )) or None
         """
 
-        # Process 'alias'
+        # Process 'content'. If 'None', initialize an empty OrderedDict
+        if content is None:
+            content = OrderedDict()
+
+        # Process 'alias'. Must be either 'str' or 'None'
         if not isinstance(alias, str) and alias is not None:
             raise TypeError("Variable 'alias' is not of type str or None: {0}"
                             .format(type(alias)))
         self.alias = alias
 
-        # Consistency checks on variable 'content'
+        # 'content' must be 'OrderedDict'
         if not isinstance(content, OrderedDict):
             raise TypeError("Variable 'content' is not an OrderedDict: {0}"
                             .format(repr(content)))
 
+        # All the keys in 'content' must be 'str'
         if not all([isinstance(_, str) for _ in content.keys()]):
             raise KeyError("Variable 'content' has non-string key(s): {0}"
                            .format(list(content.keys())))
 
-        if len(set([len(_) for _ in content.values()])) != 1:
+        # All values in 'content' must have the same length.
+        if len(content) > 0 and len(set([len(_) for _ in content.values()])) != 1:
             raise IndexError("arrays in 'content' have varying lengths: {0}"
                              .format([len(_) for _ in content.values()]))
 
@@ -184,6 +190,26 @@ def parse_args(args_in):
     return files_to_be_read, task, task_specific_args
 
 
+def cat_control(*, list_of_data, args):
+    """
+    This function controls the behavior when 'cat' is invoked.
+    At the current time, it is expected that 'args' is a list
+    of aliases, column headers, or column headers with prepended
+    aliases.
+
+    returns a ThreshFile for output.
+    """
+
+    output = ThreshFile()
+
+    # If no arguments are given, cat everything together
+    if len(args) == 0:
+        for dat in list_of_data:
+            output.content.update(dat.content)
+
+    return output
+
+
 def main(args):
     """
     This is the main function which takes the command-line arguments and
@@ -202,9 +228,10 @@ def main(args):
         for obj in list_of_data:
             obj.list_headers()
     elif task == 'cat':
-        print(list_of_data)
-        print(task_specific_args)
-        raise NotImplementedError("'cat' not implemented.")
+        output = cat_control(list_of_data=list_of_data,
+                             args=task_specific_args)
+        print(output.as_text())
+        raise NotImplementedError("'cat' not fully implemented.")
     elif task == 'burst':
         raise NotImplementedError("'burst' not implemented.")
     else:

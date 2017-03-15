@@ -8,6 +8,7 @@ probably don't need any checking.
 import sys
 import itertools
 import pathlib
+from collections import OrderedDict
 import numpy as np
 import pytest
 import basic_files
@@ -52,6 +53,12 @@ def test_initialize():
 #
 # Initialize ThreshFile Object
 #
+
+def test_initialize_ThreshFile_no_content():
+    """ Do a basic initialization of a ThreshFile without content. """
+    threshfile = thresh.ThreshFile()
+    assert threshfile.alias is None
+    assert threshfile.content == OrderedDict()
 
 def test_initialize_ThreshFile_no_alias(content_1):
     """ Do a basic initialization of a ThreshFile without an alias. """
