@@ -109,8 +109,8 @@ class ThreshFile:
             # Unknown input. Raise exception.
             raise TypeError("Unrecognized input: {0}".format(repr(filename)))
 
-        # Set the alias to the filename if it is not given
-        alias = str_filename if alias is None else str(alias)
+        # Set the alias to None if it is not given
+        alias = None if alias is None else str(alias)
 
         # If .csv then comma-separated, otherwise whitespace-delimited
         delimiter = ',' if str_filename[-4:].lower() == ".csv" else None
@@ -190,6 +190,34 @@ def parse_args(args_in):
     return files_to_be_read, task, task_specific_args
 
 
+def verify_no_naming_collisions(list_of_data):
+    """
+    This ensures that there are no ambiguous entries
+    """
+
+    # Generate all the names
+    aliases = set()
+    column_names = set()
+    aliased_column_names = set()
+    for dat in list_of_data:
+
+        if dat.alias is not None:
+            aliases.add(dat.alias)
+
+        for column_header in dat.content.keys():
+            column_names.add(column_header)
+            if dat.alias is not None:
+                aliased_column_names.add(dat.alias + column_header)
+
+    # Check for collisions between aliases and any column name
+    ambiguous_requests = (list(aliases.intersection(column_names))
+                        + list(aliases.intersection(aliased_column_names))
+                        + list(column_names.intersection(aliased_column_names))
+                         )
+
+    return aliases, column_names, aliased_column_names, ambiguous_requests
+
+
 def cat_control(*, list_of_data, args):
     """
     This function controls the behavior when 'cat' is invoked.
@@ -198,16 +226,61 @@ def cat_control(*, list_of_data, args):
     aliases.
 
     returns a ThreshFile for output.
+
+    Each column must be uniquely defined in the input 'args' and
+    have a unique header for the output.
     """
 
-    output = ThreshFile()
+    a = verify_no_naming_collisions(list_of_data)
+    aliases, column_names, aliased_column_names, ambiguous_requests = a
 
-    # If no arguments are given, cat everything together
+    # If no arguments are given, include every column
     if len(args) == 0:
         for dat in list_of_data:
-            output.content.update(dat.content)
+            for column_header in dat.content.keys():
+                args.append(column_header)
 
-    return output
+    output = {"headers":[], "arrays":[]}
+    for arg in args:
+
+        if arg in ambiguous_requests:
+            raise Exception("Ambiguous request: {0}".format(arg))
+        elif arg in aliases:
+            for dat in list_of_data:
+                if arg != dat.alias:
+                    continue
+                for column_name in dat.content.keys():
+                    output["headers"].append(column_name)
+                    output["arrays"].append(dat.content[column_name])
+                break
+
+        elif arg in column_names:
+            for dat in list_of_data:
+                if arg not in dat.content:
+                    continue
+                output["headers"].append(arg)
+                output["arrays"].append(dat.content[arg])
+                break
+
+        elif arg in aliased_column_names:
+            for dat in list_of_data:
+                if arg[0] != dat.alias:
+                    continue
+                output["headers"].append(arg[1:])
+                output["arrays"].append(dat.content[arg[1:]])
+                break
+        else:
+            raise Exception("Alias/column not found: '{0}'".format(arg))
+
+    # Perform uniqueness checks
+    if len(set(output["headers"])) != len(output["headers"]):
+        raise Exception("Non-unique columns requested in output")
+
+
+    print(list(zip(output["headers"], output["arrays"])))
+    od = OrderedDict(zip(output["headers"], output["arrays"]))
+    return ThreshFile(content=od)
+
 
 
 def main(args):
