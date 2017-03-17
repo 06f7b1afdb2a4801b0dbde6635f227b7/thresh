@@ -3,7 +3,7 @@
 The init file for the 'thresh' library.
 """
 import pathlib
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 import numpy as np
 
 __version__ = (0, 0, 1)
@@ -272,12 +272,13 @@ def cat_control(*, list_of_data, args):
         else:
             raise Exception("Alias/column not found: '{0}'".format(arg))
 
-    # Perform uniqueness checks
-    if len(set(output["headers"])) != len(output["headers"]):
-        raise Exception("Non-unique columns requested in output")
+    # Perform uniqueness checks and error if any header is not unique
+    counts = OrderedDict(Counter(output["headers"]).most_common())
+    if max(counts.values()) > 1:
+        collisions = ["{0}:{1}x".format(*_) for _ in counts.items() if _[1] > 1]
+        raise Exception("Non-unique columns requested in output: "
+                        + " ".join(collisions))
 
-
-    print(list(zip(output["headers"], output["arrays"])))
     od = OrderedDict(zip(output["headers"], output["arrays"]))
     return ThreshFile(content=od)
 
