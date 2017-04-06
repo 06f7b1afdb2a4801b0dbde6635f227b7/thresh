@@ -218,6 +218,48 @@ def verify_no_naming_collisions(list_of_data):
     return aliases, column_names, aliased_column_names, ambiguous_requests
 
 
+def eval_from_dict(source, eval_str):
+    """
+    Evaluates a string 'eval_str' on the arrays with the associated
+    keys in the dictionary 'source'.
+
+    This function is not perfectly safe (as it has an eval() in it),
+    but is safe enough that non-malicious use will not cause any
+    problems on the system.
+    """
+
+    safe_dict = OrderedDict((
+      ('sqrt', np.sqrt),
+      ('sin', np.sin),
+      ('cos', np.cos),
+      ('tan', np.tan),
+      ('asin', np.arcsin),
+      ('acos', np.arccos),
+      ('atan', np.arctan),
+      ('atan2', np.arctan2),
+      ('pi',   np.pi),
+      ('log', np.log),
+      ('exp', np.exp),
+      ('floor', np.floor),
+      ('ceil', np.ceil),
+      ('abs', np.abs),
+      ))
+
+    conflicts = set(safe_dict.keys()) & set(source.keys())
+    if len(conflicts) != 0:
+        raise KeyError("Series naming conflict with built-in functions:\n{0}".format(conflicts))
+
+    safe_dict.update(source)
+
+    try:
+        series = eval(eval_str, {}, safe_dict)
+    except:
+        print("+++ Error while attempting to evaluate '{0}' +++".format(eval_str))
+        raise
+
+    return series
+
+
 def cat_control(*, list_of_data, args):
     """
     This function controls the behavior when 'cat' is invoked.
@@ -279,8 +321,8 @@ def cat_control(*, list_of_data, args):
         raise Exception("Non-unique columns requested in output: "
                         + " ".join(collisions))
 
-    od = OrderedDict(zip(output["headers"], output["arrays"]))
-    return ThreshFile(content=od)
+    od_out = OrderedDict(zip(output["headers"], output["arrays"]))
+    return ThreshFile(content=od_out)
 
 
 
