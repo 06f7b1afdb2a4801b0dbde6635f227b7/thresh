@@ -2,6 +2,7 @@
 """
 The init file for the 'thresh' library.
 """
+import sys
 import pathlib
 from collections import OrderedDict, Counter
 import numpy as np
@@ -177,8 +178,8 @@ def parse_args(args_in):
             raise FileNotFoundError("File not found: " + arg)
 
     # If no files were defined
-    if len(files_to_be_read) == 0:
-        raise Exception("No files given to process.")
+#    if len(files_to_be_read) == 0:
+#        raise Exception("No files given to process.")
 
     # If no task was requested
     if task is None:
@@ -210,10 +211,10 @@ def verify_no_naming_collisions(list_of_data):
                 aliased_column_names.add(dat.alias + column_header)
 
     # Check for collisions between aliases and any column name
-    ambiguous_requests = (list(aliases.intersection(column_names))
-                        + list(aliases.intersection(aliased_column_names))
-                        + list(column_names.intersection(aliased_column_names))
-                         )
+    ambiguous_requests = set(list(aliases.intersection(column_names))
+                           + list(aliases.intersection(aliased_column_names))
+                           + list(column_names.intersection(aliased_column_names))
+                            )
 
     return aliases, column_names, aliased_column_names, ambiguous_requests
 
@@ -237,17 +238,50 @@ def eval_from_dict(source, eval_str):
       ('acos', np.arccos),
       ('atan', np.arctan),
       ('atan2', np.arctan2),
+      ('cosh', np.cosh),
+      ('sinh', np.sinh),
+      ('tanh', np.tanh),
+      ('sinc', np.sinc),
       ('pi',   np.pi),
       ('log', np.log),
       ('exp', np.exp),
       ('floor', np.floor),
       ('ceil', np.ceil),
       ('abs', np.abs),
+      ('radians', np.radians),
+      ('degrees', np.degrees),
+      ('int', np.int64),
+      ('float', np.float64),
+      ('bool', np.bool8),
+      ('clip', np.clip),
+      ('hypot', np.hypot),
+      ('mod', np.mod),
+      ('round', np.round),
+      # Functions that generate floats
+      ('average', np.average),
+      ('mean', np.mean),
+      ('median', np.median),
+      ('cumprod', np.cumprod),
+      ('cumsum', np.cumsum),
+      ('dot', np.dot),
+      # Functions that generate arrays
+      ('arange', np.arange),
+      ('diff', np.diff),   # Returns an N-1 length array
+      ('interp', np.interp),
+      ('linspace', np.linspace),
+      ('ones', np.ones),
+      ('sort', np.sort),
+      ('zeros', np.zeros),
+      # Random
+      ('random', np.random.random),
+      ('uniform', np.random.uniform),
+      ('normal', np.random.normal),
       ))
 
     conflicts = set(safe_dict.keys()) & set(source.keys())
     if len(conflicts) != 0:
-        raise KeyError("Series naming conflict with built-in functions:\n{0}".format(conflicts))
+        raise KeyError("Series naming conflict with built-in functions:\n{0}"
+                       .format(conflicts))
 
     safe_dict.update(source)
 
@@ -273,56 +307,92 @@ def cat_control(*, list_of_data, args):
     have a unique header for the output.
     """
 
+    def clobber_warn(label):
+        sys.stderr.write("WARNING: clobbering column '{0}'\n".format(label))
+
     a = verify_no_naming_collisions(list_of_data)
     aliases, column_names, aliased_column_names, ambiguous_requests = a
 
-    # If no arguments are given, include every column
+    # Load the unique columns
+    unique_columns = (column_names | aliased_column_names) - ambiguous_requests
+    input_source = {}
+    for dat in list_of_data:
+        for column_name in dat.content.keys():
+            if column_name in unique_columns:
+                input_source[column_name] = dat.content[column_name]
+            if dat.alias is not None and dat.alias + column_name in unique_columns:
+                input_source[dat.alias + column_name] = dat.content[column_name]
+
+    # If no arguments are given, include every column without checking for ambiguities
     if len(args) == 0:
         for dat in list_of_data:
             for column_header in dat.content.keys():
                 args.append(column_header)
 
-    output = {"headers":[], "arrays":[]}
+    output = OrderedDict()
     for arg in args:
 
+        # The input is requesting something ambiguous
         if arg in ambiguous_requests:
             raise Exception("Ambiguous request: {0}".format(arg))
+
+        # The input is requesting an entire input file
         elif arg in aliases:
             for dat in list_of_data:
                 if arg != dat.alias:
                     continue
                 for column_name in dat.content.keys():
-                    output["headers"].append(column_name)
-                    output["arrays"].append(dat.content[column_name])
+                    if column_name in output:
+                        clobber_warn(column_name)
+                    output[column_name] = dat.content[column_name]
                 break
 
+        # The input is requesting a column by name
         elif arg in column_names:
             for dat in list_of_data:
                 if arg not in dat.content:
                     continue
-                output["headers"].append(arg)
-                output["arrays"].append(dat.content[arg])
+                if arg in output:
+                    clobber_warn(arg)
+                output[arg] = dat.content[arg]
                 break
 
+        # The input is requesting a column by aliased name
         elif arg in aliased_column_names:
             for dat in list_of_data:
                 if arg[0] != dat.alias:
                     continue
-                output["headers"].append(arg[1:])
-                output["arrays"].append(dat.content[arg[1:]])
+                if arg[1:] in output:
+                    clobber_warn(arg[1:])
+                output[arg[1:]] = dat.content[arg[1:]]
                 break
+
+        # The input is requesting to create a column
+        elif "=" in arg:
+
+            # Make sure that there is only one equals sign
+            if arg.count("=") != 1:
+                raise Exception("Too many equals signs: {0}".format(arg))
+
+            head, eval_str = [_.strip() for _ in arg.split("=")]
+            if len(head) == 0:
+                raise Exception("No column label given: {0}".format(arg))
+            if len(eval_str) == 0:
+                raise Exception("No eval string given: {0}".format(arg))
+
+            tmp_dict = OrderedDict(input_source)
+            tmp_dict.update(output)
+            s = eval_from_dict(tmp_dict, eval_str)
+
+            if head in output:
+                clobber_warn(head)
+
+            output[head] = s
+
         else:
             raise Exception("Alias/column not found: '{0}'".format(arg))
 
-    # Perform uniqueness checks and error if any header is not unique
-    counts = OrderedDict(Counter(output["headers"]).most_common())
-    if max(counts.values()) > 1:
-        collisions = ["{0}:{1}x".format(*_) for _ in counts.items() if _[1] > 1]
-        raise Exception("Non-unique columns requested in output: "
-                        + " ".join(collisions))
-
-    od_out = OrderedDict(zip(output["headers"], output["arrays"]))
-    return ThreshFile(content=od_out)
+    return ThreshFile(content=output)
 
 
 

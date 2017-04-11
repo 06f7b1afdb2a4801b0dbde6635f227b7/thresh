@@ -80,17 +80,6 @@ def test_parse_args_get_help(args, thresh_files):
     assert task_out == "help"
 
 
-@pytest.mark.parametrize('args', [['list'], ['cat'], ['burst']])
-def test_from_file_fail_no_files(args):
-    """
-    Test thresh.parse_args() for when no files are found. When no
-    arguments are given, it is a request for help and not an error.
-    """
-
-    with pytest.raises(Exception):
-        thresh.parse_args(args)
-
-
 def test_parse_args_fail_no_task(thresh_files):
     """
     Check that the parse_args() fails when no task is given.

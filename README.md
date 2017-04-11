@@ -9,15 +9,45 @@ Examples of possible operations are: extracting a single column from a file, mer
 
 The most basic functionality for _thresh_ is listing column headers and splitting files, as stated above.
 
+```bash
+$ thresh data_1.txt list
+```
+
+```bash
+$ thresh data_1.txt cat time stress
+$ thresh A=data_1.txt cat A 'mtime=1000*time'
+```
+
+```bash
+$ thresh cat 't=linspace(0,1,10)' 'sine=sin(t)'
+```
+
+```bash
+$ thresh data_1.txt cat 'time1=linspace(min(time),max(time),100)' 'stress1=interp(time1,time,stress)'
+```
+
+
 ### Listing Column Headers
 
 ```bash
 $ thresh column_data_1.txt list
 ==> column_data_1.txt <==
-  1 time
-  2 strain
-  3 stress
+ idx    name    alias    length
+   1    time                  5
+   2  strain                  5
+   3  stress                  5
 ```
+
+```bash
+$ thresh A=column_data_1.txt list
+==> column_data_1.txt <==
+ idx    name    alias    length
+   1    time    Atime          5
+   2  strain  Astrain          5
+   3  stress  Astress          5
+```
+
+
 
 ```bash
 $ thresh column_data_1.txt column_data_2.txt list
@@ -79,11 +109,29 @@ $ thresh A=data_1.txt data_2.txt cat Atime strain stress density
 ### Manipulating Columns
 ```bash
 # create a new column called 'mtime' which is milliseconds (all equivalent)
-$ thresh data_1.txt cat time=1000*time
-$ thresh data_1.txt cat time=1000*Atime
-$ thresh data_1.txt cat Atime=1000*time
-$ thresh A=data_1.txt cat Atime=1000*Atime
+$ thresh data_1.txt cat mtime=1000*time
+$ thresh A=data_1.txt cat mtime=1000*time
+$ thresh A=data_1.txt cat mtime=1000*Atime
 ```
+
+### Creating new files
+```bash
+# Create a new file that with numbers and their squares
+$ thresh cat 't=arange(1,6,1)' 'squares=t**2'
+   t  squares
+   1        1
+   2        4
+   3        9
+   4       16
+   5       25
+```
+
+```bash
+# Create a new file that has a sine wave and a noisey sine wave
+$ thresh cat 't=linspace(0.0,pi,100)' 'sine=sin(t)' 'noisey=sine+random.uniform(-1.0,1.0,len(sine))'
+```
+
+
 
 ### Splitting Files into Many Single-Column Files
 
