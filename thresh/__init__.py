@@ -310,6 +310,9 @@ def cat_control(*, list_of_data, args):
     def clobber_warn(label):
         sys.stderr.write("WARNING: clobbering column '{0}'\n".format(label))
 
+    def remove_warn(label):
+        sys.stderr.write("WARNING: removing column '{0}'\n".format(label))
+
     a = verify_no_naming_collisions(list_of_data)
     aliases, column_names, aliased_column_names, ambiguous_requests = a
 
@@ -384,10 +387,21 @@ def cat_control(*, list_of_data, args):
             tmp_dict.update(output)
             s = eval_from_dict(tmp_dict, eval_str)
 
-            if head in output:
-                clobber_warn(head)
 
-            output[head] = s
+            if s is None:
+                # User requested deleting a column
+                if head not in output.keys():
+                    raise Exception("Failed to remove '{0}': not found."
+                                    .format(head))
+                else:
+                    remove_warn(head)
+                    output.pop(head)
+            else:
+                # We only clobber if it already exists
+                if head in output:
+                    clobber_warn(head)
+                output[head] = s
+                print(head, s)
 
         else:
             raise Exception("Alias/column not found: '{0}'".format(arg))

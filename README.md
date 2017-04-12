@@ -5,17 +5,19 @@ The _thresh_ module is meant primarily as a python module for a command-line too
 Examples of possible operations are: extracting a single column from a file, merging two files with columns, shifting or scaling a column.
 
 
-## Usage Examples
-
-The most basic functionality for _thresh_ is listing column headers and splitting files, as stated above.
+## Quick Start Examples
 
 ```bash
 $ thresh data_1.txt list
 ```
 
 ```bash
+# Cat the only columns 'time' and 'stress'
 $ thresh data_1.txt cat time stress
+# Cat the whole file, plus a millisecond column 'mtime'
 $ thresh A=data_1.txt cat A 'mtime=1000*time'
+# Cat the whole file, minus column 'stress'
+$ thresh A=data_1.txt cat A stress=None
 ```
 
 ```bash
