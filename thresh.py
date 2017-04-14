@@ -198,10 +198,6 @@ def parse_args(args_in):
         else:
             raise FileNotFoundError("File not found: " + arg)
 
-    # If no files were defined
-#    if len(files_to_be_read) == 0:
-#        raise Exception("No files given to process.")
-
     # If no task was requested
     if task is None:
         raise Exception("No task requested.")
@@ -282,10 +278,11 @@ def eval_from_dict(source, eval_str):
       ('average', np.average),
       ('mean', np.mean),
       ('median', np.median),
-      ('cumprod', np.cumprod),
-      ('cumsum', np.cumsum),
       ('dot', np.dot),
       # Functions that generate arrays
+      ('array', np.array),
+      ('cumprod', np.cumprod),
+      ('cumsum', np.cumsum),
       ('arange', np.arange),
       ('diff', np.diff),   # Returns an N-1 length array
       ('interp', np.interp),
@@ -422,7 +419,6 @@ def cat_control(*, list_of_data, args):
                 if head in output:
                     clobber_warn(head)
                 output[head] = s
-                print(head, s)
 
         else:
             raise Exception("Alias/column not found: '{0}'".format(arg))
@@ -452,11 +448,11 @@ def main(args):
         output = cat_control(list_of_data=list_of_data,
                              args=task_specific_args)
         print(output.as_text())
-        raise NotImplementedError("'cat' not fully implemented.")
     elif task == 'burst':
         raise NotImplementedError("'burst' not implemented.")
     else:
         raise Exception("Task not recognized: '{0}'.".format(task))
+
 
 if __name__ == '__main__':
     main(sys.argv[1:])

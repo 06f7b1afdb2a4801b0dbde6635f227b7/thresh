@@ -24,6 +24,7 @@ base = OrderedDict((
     ("A",       np.array([  8,  5,  8,  2, -3])),
     ("B",       np.array([  2,  8,  2,  5,  3])),
     ("C",       np.array([  3,  7, -2, -5,  4])),
+    ("T",       np.array([  0,  1,  2,  3,  4])),
      ))
 
 solutions = OrderedDict((
@@ -44,11 +45,30 @@ solutions = OrderedDict((
     ("A*B",     np.array([ 16, 40, 16, 10, -9])),
     ("A*C",     np.array([ 24, 35,-16,-10,-12])),
     ("B*C",     np.array([  6, 56, -4,-25, 12])),
-    # Division
+    # Division and integer division
     ("B/10",    np.array([0.2,0.8,0.2,0.5,0.3])),
+    ("B//C",    np.array([  0,  1, -1, -1,  0])),
     # Power
     ("A**2",    np.array([ 64, 25, 64,  4,  9])),
     ("A**B",    np.array([ 64, 390625, 64, 32, -27])),
+    # functions that generate floats
+    ("average(A)*ones(1)", np.array([ 4.0])),
+    ("mean(A)*ones(1)",    np.array([ 4.0])),
+    ("median(A)*ones(1)",  np.array([ 5.0])),
+    ("dot(A,B)*ones(1)",   np.array([73.0])),
+    # functions that generate arrays
+    ("cumprod(A)",      np.array([   8,  40, 320, 640, -1920])),
+    ("cumsum(A)",       np.array([   8,  13,  21,  23,  20])),
+    ("arange(1,10,2)",  np.array([   1,   3,   5,   7,   9])),
+    ("diff(A)",         np.array([  -3,   3,  -6,  -5])),
+    ("interp(arange(0,2,0.5),T,C)",
+                        np.array([   3,   5,   7, 2.5])),
+    ("linspace(0,1,3)", np.array([   0, 0.5, 1.0])),
+    ("ones(3)",         np.array([   1,   1,   1])),
+    ("3*ones(3)",       np.array([   3,   3,   3])),
+    ("sort(A)",         np.array([  -3,   2,   5,   8,   8])),
+    ("sort(A)[::-1]",   np.array([   8,   8,   5,   2,  -3])),
+    ("zeros(3)",        np.array([   0,   0,   0])),
      ))
 
 
