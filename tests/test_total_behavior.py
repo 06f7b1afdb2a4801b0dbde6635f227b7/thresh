@@ -44,7 +44,23 @@ def test_cat1(capsys, thresh_files):
 
 
 def test_cat2(capsys, thresh_files):
-    """ Test the behavior of CAT on a simple file extracting one column"""
+    """ Test the behavior of CAT on a simple file extracting individual columns """
+
+    args = ["A="+str(thresh_files["pass_a.txt"]), "cat", "Aa", "b"]
+    thresh.main(args)
+    out, err = capsys.readouterr()
+
+    assert out == """                      a                      b
+  +7.00000000000000e+00  +8.00000000000000e+00
+  +0.00000000000000e+00  +5.00000000000000e+00
+  +1.00000000000000e+00  +2.00000000000000e+00
+  +3.00000000000000e+00  +4.00000000000000e+00
+  +7.00000000000000e+00  +1.00000000000000e+00
+"""
+
+
+def test_cat2(capsys, thresh_files):
+    """ Test the behavior of CAT on a simple file extracting individual columns """
 
     args = ["A="+str(thresh_files["pass_a.txt"]), "cat", "Aa", "b"]
     thresh.main(args)
@@ -88,4 +104,20 @@ def test_cat3(capsys, thresh_files):
   +5.00000000000000e-01  +2.50000000000000e-01
   +7.50000000000000e-01  +5.62500000000000e-01
   +1.00000000000000e+00  +1.00000000000000e+00
+"""
+
+
+def test_cat4(capsys, thresh_files):
+    """ Test the behavior of CAT on a simple file excluding certain columns """
+
+    args = ["A="+str(thresh_files["pass_a.txt"]), "cat", "A", "c=None"]
+    thresh.main(args)
+    out, err = capsys.readouterr()
+
+    assert out == """                      a                      b
+  +7.00000000000000e+00  +8.00000000000000e+00
+  +0.00000000000000e+00  +5.00000000000000e+00
+  +1.00000000000000e+00  +2.00000000000000e+00
+  +3.00000000000000e+00  +4.00000000000000e+00
+  +7.00000000000000e+00  +1.00000000000000e+00
 """
