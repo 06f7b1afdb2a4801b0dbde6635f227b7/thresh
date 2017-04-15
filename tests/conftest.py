@@ -52,21 +52,21 @@ def content_3():
 
 
 @pytest.fixture
-def threshfile_1():
-    """ A ThreshFile object built on 'content_1'. """
-    return thresh.ThreshFile(content=content_1(), alias="threshfile_1")
+def tabularfile_1():
+    """ A TabularFile object built on 'content_1'. """
+    return thresh.TabularFile(content=content_1(), alias="tabularfile_1")
 
 
 @pytest.fixture
-def threshfile_2():
-    """ A ThreshFile object built on 'content_2'. """
-    return thresh.ThreshFile(content=content_2(), alias="threshfile_2")
+def tabularfile_2():
+    """ A TabularFile object built on 'content_2'. """
+    return thresh.TabularFile(content=content_2(), alias="tabularfile_2")
 
 
 @pytest.fixture
-def threshfile_3():
-    """ A ThreshFile object built on 'content_3'. """
-    return thresh.ThreshFile(content=content_3(), alias="threshfile_3")
+def tabularfile_3():
+    """ A TabularFile object built on 'content_3'. """
+    return thresh.TabularFile(content=content_3(), alias="tabularfile_3")
 
 
 @pytest.fixture

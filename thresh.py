@@ -31,7 +31,7 @@ import numpy as np
 __version__ = (0, 0, 1)
 
 
-class ThreshFile:
+class TabularFile:
     """
     The basic representation of tabular files.
     """
@@ -80,7 +80,7 @@ class ThreshFile:
 
     def list_headers(self, *, print_alias=True):
         """
-        Print the list of headers and the header index of the ThreshFile. The
+        Print the list of headers and the header index of the TabularFile. The
         header index starts at 1, not 0.
         """
         if print_alias:
@@ -92,7 +92,7 @@ class ThreshFile:
 
     def as_text(self, *, delimiter=""):
         """
-        Compile the contents of the ThreshFile and return as
+        Compile the contents of the TabularFile and return as
         text. This allows easy uniform printing to the terminal
         or to a file.
         """
@@ -118,7 +118,7 @@ class ThreshFile:
     def from_file(cls, filename, alias=None):
         """
         Read in a text-delimited or comma-delimited text file
-        and return the corresponding ThreshFile object.
+        and return the corresponding TabularFile object.
         """
 
         # Convert the filename to a string
@@ -319,7 +319,7 @@ def cat_control(*, list_of_data, args):
     of aliases, column headers, or column headers with prepended
     aliases.
 
-    returns a ThreshFile for output.
+    returns a TabularFile for output.
 
     Each column must be uniquely defined in the input 'args' and
     have a unique header for the output.
@@ -423,7 +423,7 @@ def cat_control(*, list_of_data, args):
         else:
             raise Exception("Alias/column not found: '{0}'".format(arg))
 
-    return ThreshFile(content=output)
+    return TabularFile(content=output)
 
 
 
@@ -437,7 +437,7 @@ def main(args):
     files_to_be_read, task, task_specific_args = parse_args(args)
 
     # Read in the files and store them.
-    list_of_data = [ThreshFile.from_file(filename, alias=alias)
+    list_of_data = [TabularFile.from_file(filename, alias=alias)
                     for filename, alias in files_to_be_read]
 
     # Perform the desired task.
