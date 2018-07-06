@@ -74,10 +74,11 @@ def test_parse_args_get_help(args, thresh_files):
         args = list(thresh_files) + args
         random.shuffle(args)
 
-    files_to_be_read_out, task_out = thresh.parse_args(args)
+    files_to_be_read_out, task_out, extra_args = thresh.parse_args(args)
 
     assert len(files_to_be_read_out) == 0
     assert task_out == "help"
+    assert len(extra_args) == 0
 
 
 def test_parse_args_fail_no_task(thresh_files):

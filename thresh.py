@@ -30,6 +30,58 @@ import numpy as np
 
 __version__ = (0, 0, 1)
 
+def print_help():
+    print("""thresh:
+verb: to separate the wheat from the chaff.
+
+This program was written to help process tabular text files in
+a quick and easy way, giving you the pieces you care about
+and discarding the rest.
+
+Usage:
+------
+
+The following files will be used in examples:
+
+$ cat file1.txt
+a b
+0 3
+1 4
+2 5
+
+$ cat file2.txt
+a c
+6 9
+7 10
+8 11
+
+Process the whole file and print to stdout (all are equivalent):
+$ thresh.py file1.txt cat             # No args = print whole file
+$ thresh.py file1.txt cat a b         # Can request specific columns
+$ thresh.py A=file1.txt cat A         # Just an alias requests the whole file
+$ thresh.py A=file1.txt cat Aa Ab     # Use aliases when columns are in multiple files
+$ thresh.py A=file1.txt cat Aa  b     # Aliases are optional
+$ thresh.py A=file1.txt cat  a Ab     # Aliases are optional
+$ thresh.py A=file1.txt cat  a  b     # Aliases are optional
+
+Extract only one column:
+$ thresh.py file1.txt cat b
+$ thresh.py Z=file1.txt cat b
+$ thresh.py Z=file1.txt cat Zb
+
+Get one column from each file:
+$ thresh.py   file1.txt   file2.txt cat  a  c
+$ thresh.py   file1.txt Q=file2.txt cat  a Qc
+$ thresh.py M=file1.txt Q=file2.txt cat Ma Qc
+
+Handle columns that exist in multiple files:
+$ thresh.py X=file1.txt Y=file2.txt cat Xa c  # Specify column 'a' from file1.txt
+$ thresh.py X=file1.txt Y=file2.txt cat Ya b  # Specify column 'a' from file2.txt
+
+Create a new file (using '' so the parentheses are passed correctly):
+$ thresh.py cat 't=linspace(0,1,5)' f=t**2
+""")
+
 
 class TabularFile:
     """
@@ -160,12 +212,18 @@ def parse_args(args_in):
     This parses the command-line inputs and organizes it in the following
     manner to be returned:
 
-    1) list of filename to be read in
+    1) list of file names to be read in along with any defined aliases:
+          a = [['file1.txt', None],
+               ['file2.txt', 'A']]
+
     2) a token specifying the task to be done with the files. Currently,
        the only tokens recognized are:
        * "list"  --> list headers
        * "cat"   --> cat together and output
        * "burst" --> split each column into its own file
+       * "help"  --> user requested the help message; do nothing
+
+    3) A list of all the remaining arguments after the token from #2.
     """
 
     # Make a copy of the input args
@@ -173,7 +231,7 @@ def parse_args(args_in):
 
     # Check if help is requested:
     if len(args) == 0 or "-h" in args or "--help" in args:
-        return [], "help"
+        return [], "help", []
 
     files_to_be_read = []
     task_specific_args = []
@@ -441,7 +499,9 @@ def main(args):
                     for filename, alias in files_to_be_read]
 
     # Perform the desired task.
-    if task == 'list':
+    if task == 'help':
+        print_help()
+    elif task == 'list':
         for obj in list_of_data:
             obj.list_headers()
     elif task == 'cat':
