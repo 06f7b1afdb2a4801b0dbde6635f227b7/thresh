@@ -81,6 +81,10 @@ $ thresh.py X=file1.txt Y=file2.txt cat Ya b  # Specify column 'a' from file2.tx
 
 Create a new file (using '' so the parentheses are passed correctly):
 $ thresh.py cat 't=linspace(0,1,5)' f=t**2
+
+Produce a file with interpolated data (create new column called 't' and overwrite
+column 'b' with the interpolated data corresponding to 't').
+$ thresh.py file1.txt cat 't=linspace(min(a),max(a),9)' 'b=interp(t,a,b)'
 """)
 
 
