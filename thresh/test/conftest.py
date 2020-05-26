@@ -4,7 +4,6 @@ This file contains the fixtures to be used for the _thresh_ tests. These
 make it easier to write tests by giving ready access to variables and data
 structures.
 """
-import sys
 import copy
 import pathlib
 from collections import OrderedDict
@@ -13,11 +12,7 @@ import pytest
 
 import basic_files
 
-
-try:
-    import thresh
-except ImportError:
-    thresh = None
+import thresh
 
 obj_content_1 = OrderedDict((
         ('a', np.array([1.0, 2.0, 3.0, 4.0])),
@@ -50,7 +45,7 @@ def content_2():
 @pytest.fixture
 def content_3():
     """ Sample content, version 3. """
-    return copy.deepcopy(ob_content_3)
+    return copy.deepcopy(obj_content_3)
 
 
 @pytest.fixture
