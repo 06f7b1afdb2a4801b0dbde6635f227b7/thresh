@@ -22,71 +22,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """
-This file contains all the components necessary to run 'thresh'.
+TODO
 """
-import sys
-import pathlib
-from collections import OrderedDict, Counter
 import numpy as np
-
-__version__ = (0, 0, 1)
-
-def print_help():
-    print("""thresh:
-verb: to separate the wheat from the chaff.
-
-This program was written to help process tabular text files in
-a quick and easy way, giving you the pieces you care about
-and discarding the rest.
-
-Usage:
-------
-
-The following files will be used in examples:
-
-$ cat file1.txt
-a b
-0 3
-1 4
-2 5
-
-$ cat file2.txt
-a c
-6 9
-7 10
-8 11
-
-Process the whole file and print to stdout (all are equivalent):
-$ thresh.py file1.txt cat             # No args = print whole file
-$ thresh.py file1.txt cat a b         # Can request specific columns
-$ thresh.py A=file1.txt cat A         # Just an alias requests the whole file
-$ thresh.py A=file1.txt cat Aa Ab     # Use aliases when columns are in multiple files
-$ thresh.py A=file1.txt cat Aa  b     # Aliases are optional
-$ thresh.py A=file1.txt cat  a Ab     # Aliases are optional
-$ thresh.py A=file1.txt cat  a  b     # Aliases are optional
-
-Extract only one column:
-$ thresh.py file1.txt cat b
-$ thresh.py Z=file1.txt cat b
-$ thresh.py Z=file1.txt cat Zb
-
-Get one column from each file:
-$ thresh.py   file1.txt   file2.txt cat  a  c
-$ thresh.py   file1.txt Q=file2.txt cat  a Qc
-$ thresh.py M=file1.txt Q=file2.txt cat Ma Qc
-
-Handle columns that exist in multiple files:
-$ thresh.py X=file1.txt Y=file2.txt cat Xa c  # Specify column 'a' from file1.txt
-$ thresh.py X=file1.txt Y=file2.txt cat Ya b  # Specify column 'a' from file2.txt
-
-Create a new file (using '' so the parentheses are passed correctly):
-$ thresh.py cat 't=linspace(0,1,5)' f=t**2
-
-Produce a file with interpolated data (create new column called 't' and overwrite
-column 'b' with the interpolated data corresponding to 't').
-$ thresh.py file1.txt cat 't=linspace(min(a),max(a),9)' 'b=interp(t,a,b)'
-""")
-
+from collections import OrderedDict
 
 class TabularFile:
     """
