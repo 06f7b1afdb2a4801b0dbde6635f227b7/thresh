@@ -14,10 +14,7 @@ import pytest
 import basic_files
 
 
-try:
-    import thresh
-except ImportError:
-    thresh = None
+import thresh
 
 
 def test_absolute_truth():

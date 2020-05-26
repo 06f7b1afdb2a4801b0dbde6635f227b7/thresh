@@ -8,9 +8,6 @@ import random
 import pathlib
 import pytest
 
-# Ensure that 'thresh' is imported from parent directory.
-sys.path.insert(0, str(pathlib.Path(__file__).absolute().parent.parent.parent))
-
 import thresh
 
 
