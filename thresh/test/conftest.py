@@ -5,6 +5,7 @@ make it easier to write tests by giving ready access to variables and data
 structures.
 """
 import sys
+import copy
 import pathlib
 from collections import OrderedDict
 import numpy as np
@@ -21,52 +22,56 @@ try:
 except ImportError:
     thresh = None
 
-
-@pytest.fixture
-def content_1():
-    """ Sample content, version 1. """
-    return OrderedDict((
+obj_content_1 = OrderedDict((
         ('a', np.array([1.0, 2.0, 3.0, 4.0])),
         ('b', np.array([0.0, 0.1, 0.2, 0.3])),
         ('c', np.array([1.4, 2.3, 3.2, 4.1])),
         ))
-
-
-@pytest.fixture
-def content_2():
-    """ Sample content, version 2. """
-    return OrderedDict((
+obj_content_2 = OrderedDict((
         ('time', np.array([0.0, 1.0, 2.0, 3.0])),
         ('strain', np.array([0.0, 0.2, 0.3, 0.3])),
         ('stress', np.array([0.0, 2.0, 3.0, 3.0])),
         ))
 
+obj_content_3 = OrderedDict((
+        ('var1', np.array([0.5, 1.0, 1.5]) * np.pi),
+        ('var2', np.array([1.0, 2.0, 3.0]) / 9.0),
+        ))
+
+@pytest.fixture
+def content_1():
+    """ Sample content, version 1. """
+    return copy.deepcopy(obj_content_1)
+
+
+@pytest.fixture
+def content_2():
+    """ Sample content, version 2. """
+    return copy.deepcopy(obj_content_2)
+
 
 @pytest.fixture
 def content_3():
     """ Sample content, version 3. """
-    return OrderedDict((
-        ('var1', np.array([0.5, 1.0, 1.5]) * np.pi),
-        ('var2', np.array([1.0, 2.0, 3.0]) / 9.0),
-        ))
+    return copy.deepcopy(ob_content_3)
 
 
 @pytest.fixture
 def tabularfile_1():
     """ A TabularFile object built on 'content_1'. """
-    return thresh.TabularFile(content=content_1(), alias="tabularfile_1")
+    return thresh.TabularFile(content=copy.deepcopy(obj_content_1), alias="tabularfile_1")
 
 
 @pytest.fixture
 def tabularfile_2():
     """ A TabularFile object built on 'content_2'. """
-    return thresh.TabularFile(content=content_2(), alias="tabularfile_2")
+    return thresh.TabularFile(content=copy.deepcopy(obj_content_2), alias="tabularfile_2")
 
 
 @pytest.fixture
 def tabularfile_3():
     """ A TabularFile object built on 'content_3'. """
-    return thresh.TabularFile(content=content_3(), alias="tabularfile_3")
+    return thresh.TabularFile(content=copy.deepcopy(obj_content_3), alias="tabularfile_3")
 
 
 @pytest.fixture
