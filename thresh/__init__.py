@@ -458,12 +458,28 @@ def main(args):
 
     elif instructions["postprocess"].action == "print":
         delimiter = "," if instructions["postprocess"].argument == ".csv" else ""
-        print(list_of_data[0].as_text(delimiter=delimiter))
+        sys.stdout.write(output_data.as_text(delimiter=delimiter))
+
+    elif instructions["postprocess"].action == "output":
+        delimiter = "," if instructions["postprocess"].argument.endswith(".csv") else ""
+        with open(instructions["postprocess"].argument, 'w') as F:
+            F.write(output_data.as_text(delimiter=delimiter))
+        sys.stderr.write(f"Wrote data to {instructions['postprocess'].argument}")
+
+    elif instructions["postprocess"].action == 'check':
+        val = eval_from_dict(output_data.content, instructions["postprocess"].argument)
+        sys.stderr.write(f"Check evaluated to {repr(val)} and interpreted as {bool(val)}.\n")
+        sys.exit(0 if bool(val) else 1)
 
     elif instructions["postprocess"].action == 'burst':
         raise NotImplementedError("'burst' not implemented.")
+
     else:
-        raise Exception("Task not recognized: '{0}'.".format(task))
+        raise Exception(
+            f"Postprocessing step not recognized:"
+            f" action={repr(instructions['postprocess'].action)}"
+            f" argument={repr(instructions['postprocess'].argument)}"
+        )
 
 
 if __name__ == '__main__':

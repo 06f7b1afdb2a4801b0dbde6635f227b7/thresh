@@ -108,7 +108,7 @@ class TabularFile:
         for idx in range(len(self.content[keys[0]])):
             lines.append(delimiter.join(fltfmt.format(self.content[_][idx]) for _ in keys))
 
-        return "\n".join(lines)
+        return "\n".join(lines) + "\n"
 
     @classmethod
     def format_if_history_file(cls, lines):
