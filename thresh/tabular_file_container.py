@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # MIT License
-#
-# Copyright (c) 2016
+# # Copyright (c) 2016
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +23,7 @@
 """
 TODO
 """
+import sys
 import pathlib
 import numpy as np
 from collections import OrderedDict
@@ -110,6 +110,50 @@ class TabularFile:
 
         return "\n".join(lines)
 
+    @classmethod
+    def format_if_history_file(cls, lines):
+        """
+        Look to see if it's formatted like a history file. If it is, then
+        remove the comments at the top (if any) and then remove the two
+        horizontal rules above and below the headers.
+
+          Comments can go here
+          Comments can go here
+          ---------
+          col1 col2
+          =========
+             1    2
+             3    4
+        """
+        lines_lengths = [len(_) for _ in lines]
+        lines_sets = [set(_) for _ in lines]
+
+        # Look for two lines that are nothing but '-' or '='.
+        if {"-", "\n"} not in lines_sets or {"=", "\n"} not in lines_sets:
+            return lines
+
+        # We are looking to grab the last set of '-' and '=' rules.
+        N = len(lines_sets)
+        top_idx = (N - 1) - list(reversed(lines_sets)).index({"-", "\n"})
+        bottom_idx = (N - 1) - list(reversed(lines_sets)).index({"=", "\n"})
+
+        # Those two lines must have one line between them (where the
+        # headers go).
+        if bottom_idx - top_idx != 2:
+            return lines
+
+        # The lengths of the top rule, bottom rule, and headers must
+        # be the same.
+        if len(set(lines_lengths[top_idx:bottom_idx+1])) != 1:
+            return lines
+
+        # It is a history file - remove the extra lines.
+        lines.pop(bottom_idx)
+        for idx in range(top_idx+1):
+            lines.pop(0)
+
+        return lines
+
 
     @classmethod
     def from_file(cls, filename, alias=None):
@@ -118,33 +162,36 @@ class TabularFile:
         and return the corresponding TabularFile object.
         """
 
-        # Convert the filename to a string
+        # Convert the filename to a Path if it isn't already.
         if isinstance(filename, str):
-            str_filename = filename
-        elif (isinstance(filename, pathlib.PosixPath) or
-              isinstance(filename, pathlib.WindowsPath)):
-            str_filename = str(filename)
+            path_filename = pathlib.Path(filename)
+        elif isinstance(filename, pathlib.Path):
+            path_filename = filename
         else:
-            # Unknown input. Raise exception.
-            raise TypeError("Unrecognized input: {0}".format(repr(filename)))
+            raise TypeError(f"Argument 'filename' must be str or Path, not {type(filename)}")
 
         # Set the alias to None if it is not given
-        alias = None if alias is None else str(alias)
+        if alias is not None and not isinstance(alias, str):
+            raise TypeError(f"Argument 'alias' must be None or str, not {type(alias)}")
 
         # If .csv then comma-separated, otherwise whitespace-delimited
-        delimiter = ',' if str_filename[-4:].lower() == ".csv" else None
+        delimiter = ',' if path_filename.suffix.lower() == ".csv" else None
 
-        # Read the headers (first line)
-        with open(str_filename, 'r') as fobj:
-            head = fobj.readline().rstrip().split(delimiter)
+        # Read the whole file in.
+        with path_filename.open() as fobj:
+            lines = fobj.readlines()
+
+        lines = cls.format_if_history_file(lines)
+        head = lines[0].rstrip().split(delimiter)
 
         # Verify that all headers are unique
         if len(head) != len(set(head)):
-            raise KeyError("Non-unique headers detected in " + str_filename)
+            raise KeyError(f"Non-unique headers detected in {path_filename}")
 
         # Read the data
-        data = np.loadtxt(str_filename, skiprows=1,
+        data = np.genfromtxt(lines, skip_header=1,
                           unpack=True, delimiter=delimiter)
+        print("data", data, file=sys.stderr)
 
         # Put it together
         content = OrderedDict(zip(head, data))

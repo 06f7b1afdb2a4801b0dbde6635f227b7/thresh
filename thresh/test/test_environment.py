@@ -141,23 +141,23 @@ def test_as_text_comma_delimiter(tabularfile_3):
 #
 #  TabularFile.from_file()
 #
-
-def test_from_file_string(thresh_files):
+@pytest.mark.parametrize("thresh_file", [_ for _ in basic_files.base_files if _.startswith("pass_")])
+@pytest.mark.parametrize("do_path", [True, False])
+def test_from_file_string(thresh_file, do_path):
     """ Check that the TabularFile.from_file() function behaves properly. """
 
-    for thresh_file, dopath in itertools.product(thresh_files.values(), [True, False]):
+    solution_content = basic_files.base_files[thresh_file][1]
 
-        if not thresh_file.name.startswith("pass_"):
-            continue
-        solution_content = basic_files.base_files[thresh_file.name][1]
+    # Do every test with pathlib and without
+    file_obj = pathlib.Path(thresh_file) if do_path else thresh_file
 
-        # Do every test with pathlib and without
-        file_obj = pathlib.Path(thresh_file) if dopath else thresh_file
+    pathlib.Path(thresh_file).write_text(basic_files.base_files[thresh_file][0])
 
-        tf_obj = thresh.TabularFile.from_file(file_obj)
-        for key in tf_obj.content:
-            assert np.allclose(tf_obj.content[key], solution_content[key],
-                               atol=1.0e-12, rtol=1.0e-12)
+    tf_obj = thresh.TabularFile.from_file(file_obj)
+    print("tf_obj.content", tf_obj.content)
+    for key in tf_obj.content:
+        assert np.allclose(tf_obj.content[key], solution_content[key],
+                           atol=1.0e-12, rtol=1.0e-12)
 
 def test_from_file_fail_nonunique_headers(thresh_files):
     """ Test the TabularFile.from_file() for non-unique headers. """
