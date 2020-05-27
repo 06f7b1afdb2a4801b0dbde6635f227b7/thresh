@@ -164,7 +164,11 @@ class TabularFile:
 
         # Convert the filename to a Path if it isn't already.
         if isinstance(filename, str):
-            path_filename = pathlib.Path(filename)
+            if filename == "-":
+                # This actually means "read from stdin".
+                path_filename = filename
+            else:
+                path_filename = pathlib.Path(filename)
         elif isinstance(filename, pathlib.Path):
             path_filename = filename
         else:
@@ -174,12 +178,18 @@ class TabularFile:
         if alias is not None and not isinstance(alias, str):
             raise TypeError(f"Argument 'alias' must be None or str, not {type(alias)}")
 
-        # If .csv then comma-separated, otherwise whitespace-delimited
-        delimiter = ',' if path_filename.suffix.lower() == ".csv" else None
 
-        # Read the whole file in.
-        with path_filename.open() as fobj:
-            lines = fobj.readlines()
+        if path_filename == "-":
+            # Read the whole file in from stdin.
+            delimiter = None
+            lines = sys.stdin.readlines()
+        else:
+            # If .csv then comma-separated, otherwise whitespace-delimited
+            delimiter = ',' if path_filename.suffix.lower() == ".csv" else None
+
+            # Read the whole file in.
+            with path_filename.open() as fobj:
+                lines = fobj.readlines()
 
         lines = cls.format_if_history_file(lines)
         head = lines[0].rstrip().split(delimiter)

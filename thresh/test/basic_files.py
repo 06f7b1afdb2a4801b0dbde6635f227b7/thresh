@@ -50,17 +50,17 @@ base_files = {
             ("i", np.array([1, 2, 5, 2, 5], dtype=float)),
         ))
     ],
-    "pass_d.csv": [
+    "pass_d.txt": [
         (
             "This is a comment and should be thrown away.\n"
             "-----\n"
-            "g,h,i\n"
+            "g h i\n"
             "=====\n"
-            "4,0,1\n"
-            "8,3,2\n"
-            "7,8,5\n"
-            "4,6,2\n"
-            "4,8,5\n"
+            "4 0 1\n"
+            "8 3 2\n"
+            "7 8 5\n"
+            "4 6 2\n"
+            "4 8 5\n"
         ),
         OrderedDict((
             ("g", np.array([4, 8, 7, 4, 4], dtype=float)),

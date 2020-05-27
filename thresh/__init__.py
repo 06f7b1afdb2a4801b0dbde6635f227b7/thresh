@@ -25,8 +25,9 @@
 This file contains all the components necessary to run 'thresh'.
 """
 import sys
+import copy
 import pathlib
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 from .tabular_file_container import TabularFile
 import numpy as np
 
@@ -93,6 +94,20 @@ def parse_args(args_in):
     This parses the command-line inputs and organizes it in the following
     manner to be returned:
 
+    1) "gather" stage arguments
+
+    2) "process/cat" stage arguments
+
+    3) "postprocess" stage arguments
+
+    return OrderedDict((
+        ("gather": [list of namedtuple()] ),
+        ("process": [list of strings]),
+        ("postprocess": namedtuple()),
+    ))
+
+
+
     1) list of file names to be read in along with any defined aliases:
           a = [['file1.txt', None],
                ['file2.txt', 'A']]
@@ -108,43 +123,73 @@ def parse_args(args_in):
     """
 
     # Make a copy of the input args
-    args = [_ for _ in args_in]
+    args = copy.deepcopy(args_in)
+
+    # Make the returned object
+    Gather = namedtuple("Gather", ["filename", "alias"])
+    Postprocess = namedtuple("Postprocess", ["action", "argument"])
+    instructions = OrderedDict((
+        ("gather", []),
+        ("process", []),
+        ("postprocess", Postprocess(action="print", argument=".txt")),
+
+    ))
 
     # Check if help is requested:
-    if len(args) == 0 or "-h" in args or "--help" in args:
-        return [], "help", []
+    if len(args) == 0 or "-h" in args or "--help" in args or "help" in args:
+        instructions["postprocess"] = Postprocess(action="help", argument=None)
+        return instructions
 
-    files_to_be_read = []
-    task_specific_args = []
-    task = None
+    stage = "gather"
+    task = "gather"
     while len(args) > 0:
 
-        # Extract the argument
+        # Extract the argument.
         arg = args.pop(0)
 
-        # Only files or the task can be defined while task is None
-        if arg.lower() in ["list", "cat", "burst"]:
-            task = arg.lower()
-            break
-        elif pathlib.Path(arg).is_file():
-            #                        name alias
-            files_to_be_read.append([arg, None])
-        elif (arg[0].isalpha() and
-              arg[1] == "=" and
-              pathlib.Path(arg[2:]).is_file()):
-            #                        name     alias
-            files_to_be_read.append([arg[2:], arg[0]])
+        # Stage changing.
+        if arg in ["cat",]:
+            stage = "process"
+            task = "cat"
+            continue
+
+        elif arg in ["check", "output", "burst", "print"]:
+            stage = "postprocess"
+            task = arg
+            continue
+
+        elif arg in ["list"]:
+            stage = "postprocess"
+            task = arg
+            instructions[stage] = Postprocess(action=task, argument=None)
+            if len(args) != 0:
+                raise Exception(f"Unexpected extra arguments: {args}")
+            continue
+
+        # Task creation.
+        if task == "gather":
+            if pathlib.Path(arg).is_file() or arg == "-":
+                instructions[stage].append(Gather(filename=arg, alias=None))
+            elif (arg[0].isalpha() and
+                  arg[1] == "=" and
+                  (pathlib.Path(arg[2:]).is_file() or arg[2:] == "-")):
+                instructions[stage].append(Gather(filename=arg[2:], alias=arg[0]))
+            else:
+                raise FileNotFoundError(f"File not found: {arg}")
+
+        elif task == "cat":
+            instructions[stage].append(arg)
+
+        elif task in ["check", "output", "burst", "print"]:
+            instructions[stage] = Postprocess(action=task, argument=arg)
+            if len(args) != 0:
+                raise Exception(f"Unexpected extra arguments: {args}")
+
         else:
-            raise FileNotFoundError("File not found: " + arg)
+            raise Exception(f"Unexpected state: stage={stage}, task={task}, args={args}")
 
-    # If no task was requested
-    if task is None:
-        raise Exception("No task requested.")
 
-    # If all the args were not processed, pass them out
-    task_specific_args = args
-
-    return files_to_be_read, task, task_specific_args
+    return instructions
 
 
 def verify_no_naming_collisions(list_of_data):
@@ -373,23 +418,49 @@ def main(args):
     """
 
     # Parse the given arguments.
-    files_to_be_read, task, task_specific_args = parse_args(args)
+    instructions = parse_args(args)
 
+    #
     # Read in the files and store them.
-    list_of_data = [TabularFile.from_file(filename, alias=alias)
-                    for filename, alias in files_to_be_read]
+    #
+    if len(instructions["gather"]) == 0 and instructions["postprocess"].action != "help":
+        sys.stderr.write("WARNING: No files to read in.")
 
-    # Perform the desired task.
-    if task == 'help':
-        print_help()
-    elif task == 'list':
-        for obj in list_of_data:
-            obj.list_headers()
-    elif task == 'cat':
+    if [_.filename for _ in instructions["gather"]].count("-") > 1:
+        raise Exception("Cannot have more than one instance of reading from stdin ('-').")
+
+    list_of_data = [TabularFile.from_file(_.filename, alias=_.alias)
+                    for _ in instructions["gather"]]
+
+    #
+    # Process
+    #
+    if len(instructions["process"]) > 0:
         output = cat_control(list_of_data=list_of_data,
-                             args=task_specific_args)
-        print(output.as_text())
-    elif task == 'burst':
+                             args=instructions["process"])
+        list_of_data = [output]
+
+    # It only really makes sense to output a single file.
+    if len(list_of_data) > 1:
+        sys.stderr.write(f"WARNING: discarding {len(list_of_data)-1} files of data")
+    if len(list_of_data) == 0:
+        sys.stderr.write(f"WARNING: No files read in.")
+    output_data = list_of_data[0] if len(list_of_data) > 0 else None
+
+    #
+    # Postprocess
+    #
+    if instructions["postprocess"].action == 'help':
+        print_help()
+
+    elif instructions["postprocess"].action == 'list':
+        output_data.list_headers()
+
+    elif instructions["postprocess"].action == "print":
+        delimiter = "," if instructions["postprocess"].argument == ".csv" else ""
+        print(list_of_data[0].as_text(delimiter=delimiter))
+
+    elif instructions["postprocess"].action == 'burst':
         raise NotImplementedError("'burst' not implemented.")
     else:
         raise Exception("Task not recognized: '{0}'.".format(task))

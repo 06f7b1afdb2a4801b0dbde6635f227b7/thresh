@@ -7,98 +7,99 @@ import sys
 import random
 import pathlib
 import pytest
+import shlex
 
 import thresh
 
+db_gather = [
+    {
+        "name": "just stdin",
+        "args": "-",
+        "filenames": ["-"],
+        "aliases": [None],
+    },
+    {
+        "name": "aliased stdin",
+        "args": "b=-",
+        "filenames": ["-"],
+        "aliases": ["b"],
+    },
 
-#
-#  thresh.parse_args()
-#
+]
 
-@pytest.mark.parametrize('task', ['list', 'cat', 'burst'])
-def test_parse_args(thresh_files, task):
-    """ Check that the parse_args() function behaves properly without aliases. """
+db_process = [
+    {
+        "name": "blank",
+        "args": "",
+        "actions": [],
+    },
+    {
+        "name": "one arg",
+        "args": "cat t=np.linspace(0,1,10)",
+        "actions": ["t=np.linspace(0,1,10)"],
+    },
+    {
+        "name": "two args",
+        "args": "cat t=np.linspace(0,1,10) tshift=t+10",
+        "actions": ["t=np.linspace(0,1,10)", "tshift=t+10"],
+    },
+]
 
-    args = [str(val) for key, val in thresh_files.items()] + [task,]
-
-    files_to_be_read_out, task_out, task_specific_args = thresh.parse_args(args)
-
-    # This contains the filename and alias:
-    #   files_to_be_read_out = [["filename.txt", "a"],
-    #                           ["file2.txt", None]]
-
-    assert task_out == task
-    assert [_[0] for _ in files_to_be_read_out] == args[:-1]
-    assert len(task_specific_args) == 0
-
-
-@pytest.mark.parametrize('task', ['list', 'cat', 'burst'])
-def test_parse_args_with_alias(thresh_files, task):
-    """
-    Check that the parse_args() function behaves properly with aliases.
-    We're trying to check that we can pass args like
-      A=pass_a.txt pass_b.txt z=pass_c.csv
-    and get it parsed correctly.
-    """
-
-    files = [str(val) for key, val in thresh_files.items()]
-    args = [_ for _ in files] + [task,]
-    args[0] = "A=" + args[0]
-    args[2] = "z=" + args[2]
-
-    solution = [[_, None] for _ in files]
-    solution[0][1] = "A"
-    solution[2][1] = "z"
-
-    files_to_be_read_out, task_out, task_specific_args = thresh.parse_args(args)
-
-    assert task_out == task
-    assert len(solution) == len(files_to_be_read_out)
-    for idx in range(len(solution)):
-        assert solution[idx] == files_to_be_read_out[idx]
-    assert len(task_specific_args) == 0
-
-
-@pytest.mark.parametrize('args', [[], ['-h'], ['--help']])
-def test_parse_args_get_help(args, thresh_files):
-    """
-    Check that the parse_args() asks for the help text when no inputs
-    are given or when '-h' or '--help' is given.
-    """
-
-    # If '-h' or '--help', add other arguments and shuffle
-    if len(args) > 0:
-        args = list(thresh_files) + args
-        random.shuffle(args)
-
-    files_to_be_read_out, task_out, extra_args = thresh.parse_args(args)
-
-    assert len(files_to_be_read_out) == 0
-    assert task_out == "help"
-    assert len(extra_args) == 0
-
-
-def test_parse_args_fail_no_task(thresh_files):
-    """
-    Check that the parse_args() fails when no task is given.
-    """
-
-    args = [str(val) for key, val in thresh_files.items()]
-
-    with pytest.raises(Exception):
-        thresh.parse_args(args)
+db_postprocess = [
+    {
+        "name": "list",
+        "args": "list",
+        "action": "list",
+        "argument": None,
+    },
+    {
+        "name": "print",
+        "args": "print .csv",
+        "action": "print",
+        "argument": ".csv",
+    },
+    {
+        "name": "blank",
+        "args": "",
+        "action": "print",
+        "argument": ".txt",
+    },
+    {
+        "name": "check",
+        "args": "check \"this==that\"",
+        "action": "check",
+        "argument": "this==that",
+    },
+    {
+        "name": "output",
+        "args": "output foobar.csv",
+        "action": "output",
+        "argument": "foobar.csv",
+    },
+    {
+        "name": "burst",
+        "args": "burst foobar.csv",
+        "action": "burst",
+        "argument": "foobar.csv",
+    },
+]
 
 
-@pytest.mark.parametrize('task', ['list', 'cat', 'burst'])
-def test_parse_args_gather_unused_arguments(task, thresh_files):
-    """
-    Check that the parse_args() correctly passes out unused arguments.
-    """
+@pytest.mark.parametrize('gather', db_gather, ids=[_["name"] for _ in db_gather])
+@pytest.mark.parametrize('process', db_process, ids=[_["name"] for _ in db_process])
+@pytest.mark.parametrize('postprocess', db_postprocess, ids=[_["name"] for _ in db_postprocess])
+def test_parse_args(gather, process, postprocess):
+    """ """
 
-    args = [str(val) for key, val in thresh_files.items()] + [task,]
+    comp = thresh.parse_args(shlex.split(gather["args"] + " " + process["args"] + " " + postprocess["args"]))
 
-    # Add something valid to the end to get an unused argument
-    args = args + random.sample(args, 1)
+    for idx in range(len(gather["filenames"])):
+        assert comp["gather"][idx].filename == gather["filenames"][idx]
+        assert comp["gather"][idx].alias == gather["aliases"][idx]
 
-    files, task, task_specific_args = thresh.parse_args(args)
-    assert args[-1] == task_specific_args[0]
+    assert len(comp["process"]) == len(process["actions"])
+    for idx in range(len(process["actions"])):
+        assert comp["process"][idx] == process["actions"][idx]
+
+    assert comp["postprocess"].action == postprocess["action"]
+    assert comp["postprocess"].argument == postprocess["argument"]
