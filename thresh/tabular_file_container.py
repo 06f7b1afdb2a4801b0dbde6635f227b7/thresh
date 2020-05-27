@@ -201,7 +201,6 @@ class TabularFile:
         # Read the data
         data = np.genfromtxt(lines, skip_header=1,
                           unpack=True, delimiter=delimiter)
-        print("data", data, file=sys.stderr)
 
         # Put it together
         content = OrderedDict(zip(head, data))
