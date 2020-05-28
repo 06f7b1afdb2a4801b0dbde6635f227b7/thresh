@@ -278,6 +278,8 @@ def eval_from_dict(source, eval_str):
       ('random', np.random.random),
       ('uniform', np.random.uniform),
       ('normal', np.random.normal),
+      # Just all of numpy
+      ('np', np),
       ))
 
     conflicts = set(safe_dict.keys()) & set(source.keys())
@@ -375,11 +377,7 @@ def cat_control(*, list_of_data, args):
         # The input is requesting to create a column
         elif "=" in arg:
 
-            # Make sure that there is only one equals sign
-            if arg.count("=") != 1:
-                raise Exception("Too many equals signs: {0}".format(arg))
-
-            head, eval_str = [_.strip() for _ in arg.split("=")]
+            head, eval_str = [_.strip() for _ in arg.split("=", maxsplit=1)]
             if len(head) == 0:
                 raise Exception("No column label given: {0}".format(arg))
             if len(eval_str) == 0:
