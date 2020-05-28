@@ -457,6 +457,9 @@ def main(args):
         output_data.list_headers()
 
     elif instructions["postprocess"].action == "print":
+        # If you're trying to fix the warnings and the bad exit code
+        # when this gets piped to `head`, stop trying. You can't fix
+        # it. Python is just dies noisily when `head` closes the pipe.
         delimiter = "," if instructions["postprocess"].argument == ".csv" else ""
         sys.stdout.write(output_data.as_text(delimiter=delimiter))
 

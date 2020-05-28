@@ -193,6 +193,15 @@ class TabularFile:
 
         lines = cls.format_if_history_file(lines)
         head = lines[0].rstrip().split(delimiter)
+        def can_convert_to_float(x):
+            try:
+                float(x)
+            except:
+                return False
+            return True
+        if all([can_convert_to_float(_) for _ in head]):
+            sys.stderr.write(f"WARNING: No headers detected in '{filename}'. Using auto-generated ones.\n")
+            head = [f"column_{_:d}" for _ in range(len(head))]
 
         # Verify that all headers are unique
         if len(head) != len(set(head)):
