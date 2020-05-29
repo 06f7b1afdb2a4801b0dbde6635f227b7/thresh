@@ -469,8 +469,14 @@ def main(args):
 
     elif instructions["postprocess"].action == 'check':
         val = eval_from_dict(output_data.content, instructions["postprocess"].argument)
-        sys.stderr.write(f"Check evaluated to {repr(val)} and interpreted as {bool(val)}.\n")
-        sys.exit(0 if bool(val) else 1)
+        return_code = (0 if bool(val) else 1)
+        sys.stderr.write(
+            f"Performing check:\n"
+            f"{instructions['postprocess'].argument}\n"
+            f"Evaluated to {repr(val)} and {bool(val)} as a boolean.\n"
+            f"Exiting with return code {return_code}.\n"
+        )
+        sys.exit(return_code)
 
     elif instructions["postprocess"].action == 'burst':
         raise NotImplementedError("'burst' not implemented.")
