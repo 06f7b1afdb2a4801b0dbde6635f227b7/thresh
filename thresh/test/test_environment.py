@@ -14,13 +14,7 @@ import pytest
 import basic_files
 
 
-# Ensure that 'thresh' is imported from parent directory.
-sys.path.insert(0, str(pathlib.Path(__file__).absolute().parent.parent))
-
-try:
-    import thresh
-except ImportError:
-    thresh = None
+import thresh
 
 
 def test_absolute_truth():
@@ -132,38 +126,38 @@ def test_list_headers_with_alias(capsys, tabularfile_2):
 def test_as_text_default(tabularfile_3):
     """ Verifies the conversion to text with default delimiter. """
     txt = tabularfile_3.as_text()
-    assert txt == '                   var1                   var2\n  +1.57079632679490e+00  +1.11111111111111e-01\n  +3.14159265358979e+00  +2.22222222222222e-01\n  +4.71238898038469e+00  +3.33333333333333e-01'
+    assert txt == '                   var1                   var2\n  +1.57079632679490e+00  +1.11111111111111e-01\n  +3.14159265358979e+00  +2.22222222222222e-01\n  +4.71238898038469e+00  +3.33333333333333e-01\n'
 
 def test_as_text_whitespace_delimiter(tabularfile_3):
     """ Verifies the conversion to text with whitespace delimiter. """
     txt = tabularfile_3.as_text(delimiter='')
-    assert txt == '                   var1                   var2\n  +1.57079632679490e+00  +1.11111111111111e-01\n  +3.14159265358979e+00  +2.22222222222222e-01\n  +4.71238898038469e+00  +3.33333333333333e-01'
+    assert txt == '                   var1                   var2\n  +1.57079632679490e+00  +1.11111111111111e-01\n  +3.14159265358979e+00  +2.22222222222222e-01\n  +4.71238898038469e+00  +3.33333333333333e-01\n'
 
 def test_as_text_comma_delimiter(tabularfile_3):
     """ Verifies the conversion to text with comma delimiter. """
     txt = tabularfile_3.as_text(delimiter=',')
-    assert txt == '                   var1,                   var2\n  +1.57079632679490e+00,  +1.11111111111111e-01\n  +3.14159265358979e+00,  +2.22222222222222e-01\n  +4.71238898038469e+00,  +3.33333333333333e-01'
+    assert txt == '                   var1,                   var2\n  +1.57079632679490e+00,  +1.11111111111111e-01\n  +3.14159265358979e+00,  +2.22222222222222e-01\n  +4.71238898038469e+00,  +3.33333333333333e-01\n'
 
 #
 #  TabularFile.from_file()
 #
-
-def test_from_file_string(thresh_files):
+@pytest.mark.parametrize("thresh_file", [_ for _ in basic_files.base_files if _.startswith("pass_")])
+@pytest.mark.parametrize("do_path", [True, False])
+def test_from_file_string(thresh_file, do_path):
     """ Check that the TabularFile.from_file() function behaves properly. """
 
-    for thresh_file, dopath in itertools.product(thresh_files.values(), [True, False]):
+    solution_content = basic_files.base_files[thresh_file][1]
 
-        if not thresh_file.name.startswith("pass_"):
-            continue
-        solution_content = basic_files.base_files[thresh_file.name][1]
+    # Do every test with pathlib and without
+    file_obj = pathlib.Path(thresh_file) if do_path else thresh_file
 
-        # Do every test with pathlib and without
-        file_obj = pathlib.Path(thresh_file) if dopath else thresh_file
+    pathlib.Path(thresh_file).write_text(basic_files.base_files[thresh_file][0])
 
-        tf_obj = thresh.TabularFile.from_file(file_obj)
-        for key in tf_obj.content:
-            assert np.allclose(tf_obj.content[key], solution_content[key],
-                               atol=1.0e-12, rtol=1.0e-12)
+    tf_obj = thresh.TabularFile.from_file(file_obj)
+    print("tf_obj.content", tf_obj.content)
+    for key in tf_obj.content:
+        assert np.allclose(tf_obj.content[key], solution_content[key],
+                           atol=1.0e-12, rtol=1.0e-12)
 
 def test_from_file_fail_nonunique_headers(thresh_files):
     """ Test the TabularFile.from_file() for non-unique headers. """

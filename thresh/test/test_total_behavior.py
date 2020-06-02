@@ -14,14 +14,7 @@ import pytest
 import basic_files
 
 
-# Ensure that 'thresh' is imported from parent directory.
-sys.path.insert(0, str(pathlib.Path(__file__).absolute().parent.parent))
-
-try:
-    import thresh
-except ImportError:
-    thresh = None
-
+import thresh
 
 #
 #  cat

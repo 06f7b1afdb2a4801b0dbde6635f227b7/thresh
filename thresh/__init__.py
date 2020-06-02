@@ -25,8 +25,10 @@
 This file contains all the components necessary to run 'thresh'.
 """
 import sys
+import copy
 import pathlib
-from collections import OrderedDict, Counter
+from collections import OrderedDict, namedtuple
+from .tabular_file_container import TabularFile
 import numpy as np
 
 __version__ = (0, 0, 1)
@@ -87,135 +89,24 @@ column 'b' with the interpolated data corresponding to 't').
 $ thresh.py file1.txt cat 't=linspace(min(a),max(a),9)' 'b=interp(t,a,b)'
 """)
 
-
-class TabularFile:
-    """
-    The basic representation of tabular files.
-    """
-
-    def __init__(self, *, content=None, alias=None):
-        """
-        A file, as represented in thresh, requires only two descriptors, the
-        alias and the data itself. As the data has headers and columns it only
-        seemed reasonable to store it as an OrderedDict of Numpy arrays.
-
-        self.alias = str or None
-        self.content = OrderedDict((
-                       ('Column1', np.array([ 0.0, 1.0, 2.0])),
-                       ('Column2', np.array([ 1.2, 1.1, 1.0])),
-                       ('Column3', np.array([-3.0, 1.4, 1.5])),
-                                   )) or None
-        """
-
-        # Process 'content'. If 'None', initialize an empty OrderedDict
-        if content is None:
-            content = OrderedDict()
-
-        # Process 'alias'. Must be either 'str' or 'None'
-        if not isinstance(alias, str) and alias is not None:
-            raise TypeError("Variable 'alias' is not of type str or None: {0}"
-                            .format(type(alias)))
-        self.alias = alias
-
-        # 'content' must be 'OrderedDict'
-        if not isinstance(content, OrderedDict):
-            raise TypeError("Variable 'content' is not an OrderedDict: {0}"
-                            .format(repr(content)))
-
-        # All the keys in 'content' must be 'str'
-        if not all([isinstance(_, str) for _ in content.keys()]):
-            raise KeyError("Variable 'content' has non-string key(s): {0}"
-                           .format(list(content.keys())))
-
-        # All values in 'content' must have the same length.
-        if len(content) > 0 and len(set([len(_) for _ in content.values()])) != 1:
-            raise IndexError("arrays in 'content' have varying lengths: {0}"
-                             .format([len(_) for _ in content.values()]))
-
-        self.content = OrderedDict(content.items())
-
-
-    def list_headers(self, *, print_alias=True):
-        """
-        Print the list of headers and the header index of the TabularFile. The
-        header index starts at 1, not 0.
-        """
-        if print_alias:
-            print("==> {0} <==".format(self.alias))
-
-        for idx, key in enumerate(self.content.keys()):
-            print("{0: 3d} {1:s}".format(idx+1, key))
-
-
-    def as_text(self, *, delimiter=""):
-        """
-        Compile the contents of the TabularFile and return as
-        text. This allows easy uniform printing to the terminal
-        or to a file.
-        """
-        n_chars_per_column = 23
-        n_chars_decimal = n_chars_per_column - 9
-        strfmt = "{0:>" + str(n_chars_per_column) + "s}"
-        fltfmt = ("{0:+" + str(n_chars_per_column) +
-                  "." + str(n_chars_decimal) + "e}")
-
-        lines = []
-        # Format the headers.
-        lines.append(delimiter.join(strfmt.format(_) for _ in self.content))
-
-        # Format the data lines
-        keys = list(self.content.keys())
-        for idx in range(len(self.content[keys[0]])):
-            lines.append(delimiter.join(fltfmt.format(self.content[_][idx]) for _ in keys))
-
-        return "\n".join(lines)
-
-
-    @classmethod
-    def from_file(cls, filename, alias=None):
-        """
-        Read in a text-delimited or comma-delimited text file
-        and return the corresponding TabularFile object.
-        """
-
-        # Convert the filename to a string
-        if isinstance(filename, str):
-            str_filename = filename
-        elif (isinstance(filename, pathlib.PosixPath) or
-              isinstance(filename, pathlib.WindowsPath)):
-            str_filename = str(filename)
-        else:
-            # Unknown input. Raise exception.
-            raise TypeError("Unrecognized input: {0}".format(repr(filename)))
-
-        # Set the alias to None if it is not given
-        alias = None if alias is None else str(alias)
-
-        # If .csv then comma-separated, otherwise whitespace-delimited
-        delimiter = ',' if str_filename[-4:].lower() == ".csv" else None
-
-        # Read the headers (first line)
-        with open(str_filename, 'r') as fobj:
-            head = fobj.readline().rstrip().split(delimiter)
-
-        # Verify that all headers are unique
-        if len(head) != len(set(head)):
-            raise KeyError("Non-unique headers detected in " + str_filename)
-
-        # Read the data
-        data = np.loadtxt(str_filename, skiprows=1,
-                          unpack=True, delimiter=delimiter)
-
-        # Put it together
-        content = OrderedDict(zip(head, data))
-
-        return cls(content=content, alias=alias)
-
-
 def parse_args(args_in):
     """
     This parses the command-line inputs and organizes it in the following
     manner to be returned:
+
+    1) "gather" stage arguments
+
+    2) "process/cat" stage arguments
+
+    3) "postprocess" stage arguments
+
+    return OrderedDict((
+        ("gather": [list of namedtuple()] ),
+        ("process": [list of strings]),
+        ("postprocess": namedtuple()),
+    ))
+
+
 
     1) list of file names to be read in along with any defined aliases:
           a = [['file1.txt', None],
@@ -232,43 +123,73 @@ def parse_args(args_in):
     """
 
     # Make a copy of the input args
-    args = [_ for _ in args_in]
+    args = copy.deepcopy(args_in)
+
+    # Make the returned object
+    Gather = namedtuple("Gather", ["filename", "alias"])
+    Postprocess = namedtuple("Postprocess", ["action", "argument"])
+    instructions = OrderedDict((
+        ("gather", []),
+        ("process", []),
+        ("postprocess", Postprocess(action="print", argument=".txt")),
+
+    ))
 
     # Check if help is requested:
-    if len(args) == 0 or "-h" in args or "--help" in args:
-        return [], "help", []
+    if len(args) == 0 or "-h" in args or "--help" in args or "help" in args:
+        instructions["postprocess"] = Postprocess(action="help", argument=None)
+        return instructions
 
-    files_to_be_read = []
-    task_specific_args = []
-    task = None
+    stage = "gather"
+    task = "gather"
     while len(args) > 0:
 
-        # Extract the argument
+        # Extract the argument.
         arg = args.pop(0)
 
-        # Only files or the task can be defined while task is None
-        if arg.lower() in ["list", "cat", "burst"]:
-            task = arg.lower()
-            break
-        elif pathlib.Path(arg).is_file():
-            #                        name alias
-            files_to_be_read.append([arg, None])
-        elif (arg[0].isalpha() and
-              arg[1] == "=" and
-              pathlib.Path(arg[2:]).is_file()):
-            #                        name     alias
-            files_to_be_read.append([arg[2:], arg[0]])
+        # Stage changing.
+        if arg in ["cat",]:
+            stage = "process"
+            task = "cat"
+            continue
+
+        elif arg in ["check", "output", "burst", "print"]:
+            stage = "postprocess"
+            task = arg
+            continue
+
+        elif arg in ["list"]:
+            stage = "postprocess"
+            task = arg
+            instructions[stage] = Postprocess(action=task, argument=None)
+            if len(args) != 0:
+                raise Exception(f"Unexpected extra arguments: {args}")
+            continue
+
+        # Task creation.
+        if task == "gather":
+            if pathlib.Path(arg).is_file() or arg == "-":
+                instructions[stage].append(Gather(filename=arg, alias=None))
+            elif (arg[0].isalpha() and
+                  arg[1] == "=" and
+                  (pathlib.Path(arg[2:]).is_file() or arg[2:] == "-")):
+                instructions[stage].append(Gather(filename=arg[2:], alias=arg[0]))
+            else:
+                raise FileNotFoundError(f"File not found: {arg}")
+
+        elif task == "cat":
+            instructions[stage].append(arg)
+
+        elif task in ["check", "output", "burst", "print"]:
+            instructions[stage] = Postprocess(action=task, argument=arg)
+            if len(args) != 0:
+                raise Exception(f"Unexpected extra arguments: {args}")
+
         else:
-            raise FileNotFoundError("File not found: " + arg)
+            raise Exception(f"Unexpected state: stage={stage}, task={task}, args={args}")
 
-    # If no task was requested
-    if task is None:
-        raise Exception("No task requested.")
 
-    # If all the args were not processed, pass them out
-    task_specific_args = args
-
-    return files_to_be_read, task, task_specific_args
+    return instructions
 
 
 def verify_no_naming_collisions(list_of_data):
@@ -357,6 +278,8 @@ def eval_from_dict(source, eval_str):
       ('random', np.random.random),
       ('uniform', np.random.uniform),
       ('normal', np.random.normal),
+      # Just all of numpy
+      ('np', np),
       ))
 
     conflicts = set(safe_dict.keys()) & set(source.keys())
@@ -454,11 +377,7 @@ def cat_control(*, list_of_data, args):
         # The input is requesting to create a column
         elif "=" in arg:
 
-            # Make sure that there is only one equals sign
-            if arg.count("=") != 1:
-                raise Exception("Too many equals signs: {0}".format(arg))
-
-            head, eval_str = [_.strip() for _ in arg.split("=")]
+            head, eval_str = [_.strip() for _ in arg.split("=", maxsplit=1)]
             if len(head) == 0:
                 raise Exception("No column label given: {0}".format(arg))
             if len(eval_str) == 0:
@@ -497,26 +416,77 @@ def main(args):
     """
 
     # Parse the given arguments.
-    files_to_be_read, task, task_specific_args = parse_args(args)
+    instructions = parse_args(args)
 
+    #
     # Read in the files and store them.
-    list_of_data = [TabularFile.from_file(filename, alias=alias)
-                    for filename, alias in files_to_be_read]
+    #
+    if len(instructions["gather"]) == 0 and instructions["postprocess"].action != "help":
+        sys.stderr.write("WARNING: No files to read in.")
 
-    # Perform the desired task.
-    if task == 'help':
-        print_help()
-    elif task == 'list':
-        for obj in list_of_data:
-            obj.list_headers()
-    elif task == 'cat':
+    if [_.filename for _ in instructions["gather"]].count("-") > 1:
+        raise Exception("Cannot have more than one instance of reading from stdin ('-').")
+
+    list_of_data = [TabularFile.from_file(_.filename, alias=_.alias)
+                    for _ in instructions["gather"]]
+
+    #
+    # Process
+    #
+    if len(instructions["process"]) > 0:
         output = cat_control(list_of_data=list_of_data,
-                             args=task_specific_args)
-        print(output.as_text())
-    elif task == 'burst':
+                             args=instructions["process"])
+        list_of_data = [output]
+
+    # It only really makes sense to output a single file.
+    if len(list_of_data) > 1:
+        sys.stderr.write(f"WARNING: discarding {len(list_of_data)-1} files of data")
+    if len(list_of_data) == 0:
+        sys.stderr.write(f"WARNING: No files read in.")
+    output_data = list_of_data[0] if len(list_of_data) > 0 else None
+
+    #
+    # Postprocess
+    #
+    if instructions["postprocess"].action == 'help':
+        print_help()
+
+    elif instructions["postprocess"].action == 'list':
+        output_data.list_headers()
+
+    elif instructions["postprocess"].action == "print":
+        # If you're trying to fix the warnings and the bad exit code
+        # when this gets piped to `head`, stop trying. You can't fix
+        # it. Python is just dies noisily when `head` closes the pipe.
+        delimiter = "," if instructions["postprocess"].argument == ".csv" else ""
+        sys.stdout.write(output_data.as_text(delimiter=delimiter))
+
+    elif instructions["postprocess"].action == "output":
+        delimiter = "," if instructions["postprocess"].argument.endswith(".csv") else ""
+        with open(instructions["postprocess"].argument, 'w') as F:
+            F.write(output_data.as_text(delimiter=delimiter))
+        sys.stderr.write(f"Wrote data to {instructions['postprocess'].argument}")
+
+    elif instructions["postprocess"].action == 'check':
+        val = eval_from_dict(output_data.content, instructions["postprocess"].argument)
+        return_code = (0 if bool(val) else 1)
+        sys.stderr.write(
+            f"Thresh - Performing check:\n"
+            f"{instructions['postprocess'].argument}\n"
+            f"Evaluated to {repr(val)} and {bool(val)} as a boolean.\n"
+            f"Exiting with return code {return_code}.\n"
+        )
+        sys.exit(return_code)
+
+    elif instructions["postprocess"].action == 'burst':
         raise NotImplementedError("'burst' not implemented.")
+
     else:
-        raise Exception("Task not recognized: '{0}'.".format(task))
+        raise Exception(
+            f"Postprocessing step not recognized:"
+            f" action={repr(instructions['postprocess'].action)}"
+            f" argument={repr(instructions['postprocess'].argument)}"
+        )
 
 
 if __name__ == '__main__':
