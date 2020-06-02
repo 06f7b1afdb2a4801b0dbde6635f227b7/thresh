@@ -471,7 +471,7 @@ def main(args):
         val = eval_from_dict(output_data.content, instructions["postprocess"].argument)
         return_code = (0 if bool(val) else 1)
         sys.stderr.write(
-            f"Performing check:\n"
+            f"Thresh - Performing check:\n"
             f"{instructions['postprocess'].argument}\n"
             f"Evaluated to {repr(val)} and {bool(val)} as a boolean.\n"
             f"Exiting with return code {return_code}.\n"
