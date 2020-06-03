@@ -1,8 +1,14 @@
 # thresh
 
-The _thresh_ module is meant primarily as a python module for a command-line tool for manipulating files containing data in columns.
+thresh (verb): to separate the wheat from the chaff.
 
-Examples of possible operations are: extracting a single column from a file, merging two files with columns, shifting or scaling a column.
+The _thresh_ module is meant primarily as a python module for a
+command-line tool for manipulating files containing data in columns so
+that you can get rid of what you don't want (the chaff) and are left
+with what you do want (the wheat).
+
+Examples of possible operations are: extracting a single column from a
+file, merging two files with columns, shifting or scaling a column.
 
 
 ## Quick Start Examples
@@ -159,4 +165,25 @@ $ thresh cat \
   't=linspace(0.0,pi,100)' \
   'sine=sin(t)' \
   'noisey=sine+random.uniform(-1.0,1.0,len(sine))'
+```
+
+
+### Performing a Check (Assert)
+
+In some instances, you will want to make checks on the data and get
+feedback in the form of a return code (like for automated tests). Only
+one check can be made, but compound statements are okay. The returned
+value is cast to a boolean and the program terminates with a return
+code of 0 if it evaluates to True and 1 if it evaluates to False.
+
+```bash
+# Do a simple check on the data.
+$ thresh data_1.txt \
+  cat 'stress_rate=np.diff(stress)/np.diff(time)' \
+  check 'np.max(np.abs(stress_rate)) < 2.0'
+
+# Use a compound statement.
+$ thresh data_1.txt \
+  cat 'stress_rate=np.diff(stress)/np.diff(time)' \
+  check 'np.max(np.abs(stress_rate)) < 2.0 and np.all(strain >= 0)'
 ```
