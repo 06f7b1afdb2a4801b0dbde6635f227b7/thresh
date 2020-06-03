@@ -80,9 +80,11 @@ $ thresh A=data_1.txt cat A 'mtime=1000*time' list
 Note: you cannot `list` more than one file at a time.
 
 
-## Wish List
-
 ### Extracting Columns: Rules
+
+Aliases are included to allow disambiguation of columns with the same
+name in different files. For non-ambiguous column names, you can use
+the aliased name or the non-aliased name.
 
 Rules governing setting aliases:
 * The alias must be one character followed by an equal sign '='.
@@ -90,49 +92,55 @@ Rules governing setting aliases:
 * The alias cannot conflict with a column name in any input file
 * The alias cannot conflict with another alias
 
-Rules for determining the column for extracting (all matches must be
-exact and unique):
-* If column descriptor exactly matches one alias, interpret as if all
-  columns in the file were given. There cannot be two matches because
-  two files with the same alias is not allowed.
-* If the column descriptor exactly matches one column header, insert
-  column. If more than one match, it's an error.
-* Check for valid alias+name "Acolname" at start of descriptor. If valid
-  interpret as that column.
+Some of these rules can be broken and will not cause any problems
+unless you try to use an ambiguous name/alias. For example, if one
+file has a column named 't' and you try to alias a file to 't', you
+won't get an error unless you try to use the 't' descriptor.
+
 
 ### Extracting Columns
 
 ```bash
-# These are equivalent
+# These are all equivalent and print all the columns.
+$ thresh data_1.txt
 $ thresh data_1.txt cat time strain stress
-$ thresh data_1.txt cat
-$ thresh A=data_1.txt cat
 $ thresh A=data_1.txt cat A
 $ thresh A=data_1.txt cat Atime Astrain Astress
 $ thresh A=data_1.txt cat Atime strain stress
 
-# These are equivalent
-$ thresh data_1.txt data_2.txt cat
-$ thresh A=data_1.txt B=data_2.txt cat
+# These are equivalent (concatenate both files together with no repeated
+# column names).
+$ thresh data_1.txt data_2.txt
 $ thresh A=data_1.txt B=data_2.txt cat A B
+$ thresh A=data_1.txt B=data_2.txt cat time Astrain stress Bt eps Bsig
 
-# These are equivalent
-$ thresh A=data_1.txt data_2.txt cat A density
-$ thresh A=data_1.txt B=data_2.txt cat A density
-$ thresh A=data_1.txt B=data_2.txt cat A Bdensity
-$ thresh A=data_1.txt B=data_2.txt cat Atime Astrain Astress Bdensity
-$ thresh A=data_1.txt data_2.txt cat Atime strain stress density
+# These are equivalent (all of one file and one column of another).
+$ thresh A=data_1.txt data_2.txt cat A sig
+$ thresh A=data_1.txt B=data_2.txt cat A sig
+$ thresh A=data_1.txt B=data_2.txt cat A Bsig
+$ thresh A=data_1.txt B=data_2.txt cat Atime Astrain Astress Bsig
+$ thresh A=data_1.txt data_2.txt cat Atime strain stress sig
 ```
+
 
 ### Manipulating Columns
 ```bash
-# create a new column called 'mtime' which is milliseconds (all equivalent)
+# create a new file with a single column called 'mtime' which is
+# milliseconds (all equivalent)
 $ thresh data_1.txt cat mtime=1000*time
 $ thresh A=data_1.txt cat mtime=1000*time
 $ thresh A=data_1.txt cat mtime=1000*Atime
+
+# Create a new column based on data from a file and then use that
+# new column to create another column.
+$ thresh data_1.txt cat \
+  'dstress=np.diff(stress)' \
+  'dt=np.diff(time)' \
+  'stress_rate=dstress / dt'
 ```
 
-### Creating new files
+
+### Creating New Files With No Input File
 ```bash
 # Create a new file that with numbers and their squares
 $ thresh cat 't=arange(1,6,1)' 'squares=t**2'
@@ -146,26 +154,8 @@ $ thresh cat 't=arange(1,6,1)' 'squares=t**2'
 
 ```bash
 # Create a new file that has a sine wave and a noisey sine wave
-$ thresh cat 't=linspace(0.0,pi,100)' 'sine=sin(t)' 'noisey=sine+random.uniform(-1.0,1.0,len(sine))'
-```
-
-
-
-### Splitting Files into Many Single-Column Files
-
-```bash
-$ thresh column_data_1.txt burst
-Created column_data_1_time.txt
-Created column_data_1_strain.txt
-Created column_data_1_stress.txt
-```
-
-```bash
-$ thresh column_data_1.txt column_data_2.txt burst
-Created column_data_1_time.txt
-Created column_data_1_strain.txt
-Created column_data_1_stress.txt
-Created column_data_2_time.txt
-Created column_data_2_density.txt
-Created column_data_2_pressure.txt
+$ thresh cat \
+  't=linspace(0.0,pi,100)' \
+  'sine=sin(t)' \
+  'noisey=sine+random.uniform(-1.0,1.0,len(sine))'
 ```
