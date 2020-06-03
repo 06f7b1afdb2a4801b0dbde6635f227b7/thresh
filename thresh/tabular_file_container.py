@@ -28,6 +28,7 @@ import pathlib
 import numpy as np
 from collections import OrderedDict
 
+
 class TabularFile:
     """
     The basic representation of tabular files.
@@ -53,27 +54,34 @@ class TabularFile:
 
         # Process 'alias'. Must be either 'str' or 'None'
         if not isinstance(alias, str) and alias is not None:
-            raise TypeError("Variable 'alias' is not of type str or None: {0}"
-                            .format(type(alias)))
+            raise TypeError(
+                "Variable 'alias' is not of type str or None: {0}".format(type(alias))
+            )
         self.alias = alias
 
         # 'content' must be 'OrderedDict'
         if not isinstance(content, OrderedDict):
-            raise TypeError("Variable 'content' is not an OrderedDict: {0}"
-                            .format(repr(content)))
+            raise TypeError(
+                "Variable 'content' is not an OrderedDict: {0}".format(repr(content))
+            )
 
         # All the keys in 'content' must be 'str'
         if not all([isinstance(_, str) for _ in content.keys()]):
-            raise KeyError("Variable 'content' has non-string key(s): {0}"
-                           .format(list(content.keys())))
+            raise KeyError(
+                "Variable 'content' has non-string key(s): {0}".format(
+                    list(content.keys())
+                )
+            )
 
         # All values in 'content' must have the same length.
         if len(content) > 0 and len(set([len(_) for _ in content.values()])) != 1:
-            raise IndexError("arrays in 'content' have varying lengths: {0}"
-                             .format([len(_) for _ in content.values()]))
+            raise IndexError(
+                "arrays in 'content' have varying lengths: {0}".format(
+                    [len(_) for _ in content.values()]
+                )
+            )
 
         self.content = OrderedDict(content.items())
-
 
     def list_headers(self):
         """
@@ -87,7 +95,6 @@ class TabularFile:
         for idx, key in enumerate(self.content.keys()):
             print(f"{idx: 4d} | {len(self.content[key]): 6d} | {key:s}")
 
-
     def as_text(self, *, delimiter=""):
         """
         Compile the contents of the TabularFile and return as
@@ -97,8 +104,7 @@ class TabularFile:
         n_chars_per_column = 23
         n_chars_decimal = n_chars_per_column - 9
         strfmt = "{0:>" + str(n_chars_per_column) + "s}"
-        fltfmt = ("{0:+" + str(n_chars_per_column) +
-                  "." + str(n_chars_decimal) + "e}")
+        fltfmt = "{0:+" + str(n_chars_per_column) + "." + str(n_chars_decimal) + "e}"
 
         lines = []
         # Format the headers.
@@ -107,7 +113,9 @@ class TabularFile:
         # Format the data lines
         keys = list(self.content.keys())
         for idx in range(len(self.content[keys[0]])):
-            lines.append(delimiter.join(fltfmt.format(self.content[_][idx]) for _ in keys))
+            lines.append(
+                delimiter.join(fltfmt.format(self.content[_][idx]) for _ in keys)
+            )
 
         return "\n".join(lines) + "\n"
 
@@ -145,16 +153,15 @@ class TabularFile:
 
         # The lengths of the top rule, bottom rule, and headers must
         # be the same.
-        if len(set(lines_lengths[top_idx:bottom_idx+1])) != 1:
+        if len(set(lines_lengths[top_idx : bottom_idx + 1])) != 1:
             return lines
 
         # It is a history file - remove the extra lines.
         lines.pop(bottom_idx)
-        for idx in range(top_idx+1):
+        for idx in range(top_idx + 1):
             lines.pop(0)
 
         return lines
-
 
     @classmethod
     def from_file(cls, filename, alias=None):
@@ -173,12 +180,13 @@ class TabularFile:
         elif isinstance(filename, pathlib.Path):
             path_filename = filename
         else:
-            raise TypeError(f"Argument 'filename' must be str or Path, not {type(filename)}")
+            raise TypeError(
+                f"Argument 'filename' must be str or Path, not {type(filename)}"
+            )
 
         # Set the alias to None if it is not given
         if alias is not None and not isinstance(alias, str):
             raise TypeError(f"Argument 'alias' must be None or str, not {type(alias)}")
-
 
         if path_filename == "-":
             # Read the whole file in from stdin.
@@ -186,7 +194,7 @@ class TabularFile:
             lines = sys.stdin.readlines()
         else:
             # If .csv then comma-separated, otherwise whitespace-delimited
-            delimiter = ',' if path_filename.suffix.lower() == ".csv" else None
+            delimiter = "," if path_filename.suffix.lower() == ".csv" else None
 
             # Read the whole file in.
             with path_filename.open() as fobj:
@@ -194,14 +202,18 @@ class TabularFile:
 
         lines = cls.format_if_history_file(lines)
         head = lines[0].rstrip().split(delimiter)
+
         def can_convert_to_float(x):
             try:
                 float(x)
             except:
                 return False
             return True
+
         if all([can_convert_to_float(_) for _ in head]):
-            sys.stderr.write(f"WARNING: No headers detected in '{filename}'. Using auto-generated ones.\n")
+            sys.stderr.write(
+                f"WARNING: No headers detected in '{filename}'. Using auto-generated ones.\n"
+            )
             head = [f"column_{_:d}" for _ in range(len(head))]
 
         # Verify that all headers are unique
@@ -209,8 +221,7 @@ class TabularFile:
             raise KeyError(f"Non-unique headers detected in {path_filename}")
 
         # Read the data
-        data = np.genfromtxt(lines, skip_header=1,
-                          unpack=True, delimiter=delimiter)
+        data = np.genfromtxt(lines, skip_header=1, unpack=True, delimiter=delimiter)
 
         # Put it together
         content = OrderedDict(zip(head, data))

@@ -14,21 +14,28 @@ import basic_files
 
 import thresh
 
-obj_content_1 = OrderedDict((
-        ('a', np.array([1.0, 2.0, 3.0, 4.0])),
-        ('b', np.array([0.0, 0.1, 0.2, 0.3])),
-        ('c', np.array([1.4, 2.3, 3.2, 4.1])),
-        ))
-obj_content_2 = OrderedDict((
-        ('time', np.array([0.0, 1.0, 2.0, 3.0])),
-        ('strain', np.array([0.0, 0.2, 0.3, 0.3])),
-        ('stress', np.array([0.0, 2.0, 3.0, 3.0])),
-        ))
+obj_content_1 = OrderedDict(
+    (
+        ("a", np.array([1.0, 2.0, 3.0, 4.0])),
+        ("b", np.array([0.0, 0.1, 0.2, 0.3])),
+        ("c", np.array([1.4, 2.3, 3.2, 4.1])),
+    )
+)
+obj_content_2 = OrderedDict(
+    (
+        ("time", np.array([0.0, 1.0, 2.0, 3.0])),
+        ("strain", np.array([0.0, 0.2, 0.3, 0.3])),
+        ("stress", np.array([0.0, 2.0, 3.0, 3.0])),
+    )
+)
 
-obj_content_3 = OrderedDict((
-        ('var1', np.array([0.5, 1.0, 1.5]) * np.pi),
-        ('var2', np.array([1.0, 2.0, 3.0]) / 9.0),
-        ))
+obj_content_3 = OrderedDict(
+    (
+        ("var1", np.array([0.5, 1.0, 1.5]) * np.pi),
+        ("var2", np.array([1.0, 2.0, 3.0]) / 9.0),
+    )
+)
+
 
 @pytest.fixture
 def content_1():
@@ -51,25 +58,31 @@ def content_3():
 @pytest.fixture
 def tabularfile_1():
     """ A TabularFile object built on 'content_1'. """
-    return thresh.TabularFile(content=copy.deepcopy(obj_content_1), alias="tabularfile_1")
+    return thresh.TabularFile(
+        content=copy.deepcopy(obj_content_1), alias="tabularfile_1"
+    )
 
 
 @pytest.fixture
 def tabularfile_2():
     """ A TabularFile object built on 'content_2'. """
-    return thresh.TabularFile(content=copy.deepcopy(obj_content_2), alias="tabularfile_2")
+    return thresh.TabularFile(
+        content=copy.deepcopy(obj_content_2), alias="tabularfile_2"
+    )
 
 
 @pytest.fixture
 def tabularfile_3():
     """ A TabularFile object built on 'content_3'. """
-    return thresh.TabularFile(content=copy.deepcopy(obj_content_3), alias="tabularfile_3")
+    return thresh.TabularFile(
+        content=copy.deepcopy(obj_content_3), alias="tabularfile_3"
+    )
 
 
 @pytest.fixture
 def thresh_files(tmpdir_factory):
     """ Create a temporary directory and write basic files """
-    tmpdir = tmpdir_factory.mktemp('tmp_thresh')
+    tmpdir = tmpdir_factory.mktemp("tmp_thresh")
 
     qobj = dict()
     qobj.update(basic_files.base_files)

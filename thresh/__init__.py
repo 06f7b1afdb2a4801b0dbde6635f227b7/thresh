@@ -33,8 +33,10 @@ import numpy as np
 
 __version__ = (0, 0, 2)
 
+
 def print_help():
-    print("""thresh (verb): to separate the wheat from the chaff.
+    print(
+        """thresh (verb): to separate the wheat from the chaff.
 
 The _thresh_ module is meant primarily as a python module for a
 command-line tool for manipulating files containing data in columns so
@@ -238,7 +240,9 @@ $ thresh data_1.txt output foo.txt
 # CSV output to foo.csv
 $ thresh data_1.txt print foo.csv
 ```
-""")
+"""
+    )
+
 
 def parse_args(args_in):
     """
@@ -279,12 +283,13 @@ def parse_args(args_in):
     # Make the returned object
     Gather = namedtuple("Gather", ["filename", "alias"])
     Postprocess = namedtuple("Postprocess", ["action", "argument"])
-    instructions = OrderedDict((
-        ("gather", []),
-        ("process", []),
-        ("postprocess", Postprocess(action="print", argument=".txt")),
-
-    ))
+    instructions = OrderedDict(
+        (
+            ("gather", []),
+            ("process", []),
+            ("postprocess", Postprocess(action="print", argument=".txt")),
+        )
+    )
 
     # Check if help is requested:
     if len(args) == 0 or "-h" in args or "--help" in args or "help" in args:
@@ -299,7 +304,7 @@ def parse_args(args_in):
         arg = args.pop(0)
 
         # Stage changing.
-        if arg in ["cat",]:
+        if arg in ["cat"]:
             stage = "process"
             task = "cat"
             continue
@@ -321,9 +326,11 @@ def parse_args(args_in):
         if task == "gather":
             if pathlib.Path(arg).is_file() or arg == "-":
                 instructions[stage].append(Gather(filename=arg, alias=None))
-            elif (arg[0].isalpha() and
-                  arg[1] == "=" and
-                  (pathlib.Path(arg[2:]).is_file() or arg[2:] == "-")):
+            elif (
+                arg[0].isalpha()
+                and arg[1] == "="
+                and (pathlib.Path(arg[2:]).is_file() or arg[2:] == "-")
+            ):
                 instructions[stage].append(Gather(filename=arg[2:], alias=arg[0]))
             else:
                 raise FileNotFoundError(f"File not found: {arg}")
@@ -337,8 +344,9 @@ def parse_args(args_in):
                 raise Exception(f"Unexpected extra arguments: {args}")
 
         else:
-            raise Exception(f"Unexpected state: stage={stage}, task={task}, args={args}")
-
+            raise Exception(
+                f"Unexpected state: stage={stage}, task={task}, args={args}"
+            )
 
     return instructions
 
@@ -363,10 +371,11 @@ def verify_no_naming_collisions(list_of_data):
     for dat in list_of_data:
         for colname in dat.content.keys():
             # If a column name already exists then it's ambiguous.
-            if (colname in aliases
+            if (
+                colname in aliases
                 or colname in column_names
                 or colname in aliased_column_names
-                ):
+            ):
                 ambiguous_requests.add(colname)
             column_names.add(colname)
 
@@ -375,10 +384,11 @@ def verify_no_naming_collisions(list_of_data):
 
             # If an aliased column name already exists then it's ambiguous.
             acolname = dat.alias + colname
-            if (acolname in aliases
+            if (
+                acolname in aliases
                 or acolname in column_names
                 or acolname in aliased_column_names
-                ):
+            ):
                 ambiguous_requests.add(acolname)
             aliased_column_names.add(acolname)
 
@@ -395,62 +405,65 @@ def eval_from_dict(source, eval_str):
     problems on the system.
     """
 
-    safe_dict = OrderedDict((
-      ('sqrt', np.sqrt),
-      ('sin', np.sin),
-      ('cos', np.cos),
-      ('tan', np.tan),
-      ('asin', np.arcsin),
-      ('acos', np.arccos),
-      ('atan', np.arctan),
-      ('atan2', np.arctan2),
-      ('cosh', np.cosh),
-      ('sinh', np.sinh),
-      ('tanh', np.tanh),
-      ('sinc', np.sinc),
-      ('pi',   np.pi),
-      ('log', np.log),
-      ('exp', np.exp),
-      ('floor', np.floor),
-      ('ceil', np.ceil),
-      ('abs', np.abs),
-      ('radians', np.radians),
-      ('degrees', np.degrees),
-      ('int', np.int64),
-      ('float', np.float64),
-      ('bool', np.bool8),
-      ('clip', np.clip),
-      ('hypot', np.hypot),
-      ('mod', np.mod),
-      ('round', np.round),
-      # Functions that generate floats
-      ('average', np.average),
-      ('mean', np.mean),
-      ('median', np.median),
-      ('dot', np.dot),
-      # Functions that generate arrays
-      ('array', np.array),
-      ('cumprod', np.cumprod),
-      ('cumsum', np.cumsum),
-      ('arange', np.arange),
-      ('diff', np.diff),   # Returns an N-1 length array
-      ('interp', np.interp),
-      ('linspace', np.linspace),
-      ('ones', np.ones),
-      ('sort', np.sort),
-      ('zeros', np.zeros),
-      # Random
-      ('random', np.random.random),
-      ('uniform', np.random.uniform),
-      ('normal', np.random.normal),
-      # Just all of numpy
-      ('np', np),
-      ))
+    safe_dict = OrderedDict(
+        (
+            ("sqrt", np.sqrt),
+            ("sin", np.sin),
+            ("cos", np.cos),
+            ("tan", np.tan),
+            ("asin", np.arcsin),
+            ("acos", np.arccos),
+            ("atan", np.arctan),
+            ("atan2", np.arctan2),
+            ("cosh", np.cosh),
+            ("sinh", np.sinh),
+            ("tanh", np.tanh),
+            ("sinc", np.sinc),
+            ("pi", np.pi),
+            ("log", np.log),
+            ("exp", np.exp),
+            ("floor", np.floor),
+            ("ceil", np.ceil),
+            ("abs", np.abs),
+            ("radians", np.radians),
+            ("degrees", np.degrees),
+            ("int", np.int64),
+            ("float", np.float64),
+            ("bool", np.bool8),
+            ("clip", np.clip),
+            ("hypot", np.hypot),
+            ("mod", np.mod),
+            ("round", np.round),
+            # Functions that generate floats
+            ("average", np.average),
+            ("mean", np.mean),
+            ("median", np.median),
+            ("dot", np.dot),
+            # Functions that generate arrays
+            ("array", np.array),
+            ("cumprod", np.cumprod),
+            ("cumsum", np.cumsum),
+            ("arange", np.arange),
+            ("diff", np.diff),  # Returns an N-1 length array
+            ("interp", np.interp),
+            ("linspace", np.linspace),
+            ("ones", np.ones),
+            ("sort", np.sort),
+            ("zeros", np.zeros),
+            # Random
+            ("random", np.random.random),
+            ("uniform", np.random.uniform),
+            ("normal", np.random.normal),
+            # Just all of numpy
+            ("np", np),
+        )
+    )
 
     conflicts = set(safe_dict.keys()) & set(source.keys())
     if len(conflicts) != 0:
-        raise KeyError("Series naming conflict with built-in functions:\n{0}"
-                       .format(conflicts))
+        raise KeyError(
+            "Series naming conflict with built-in functions:\n{0}".format(conflicts)
+        )
 
     safe_dict.update(source)
 
@@ -552,12 +565,10 @@ def cat_control(*, list_of_data, args):
             tmp_dict.update(output)
             s = eval_from_dict(tmp_dict, eval_str)
 
-
             if s is None:
                 # User requested deleting a column
                 if head not in output.keys():
-                    raise Exception("Failed to remove '{0}': not found."
-                                    .format(head))
+                    raise Exception("Failed to remove '{0}': not found.".format(head))
                 else:
                     remove_warn(head)
                     output.pop(head)
@@ -593,26 +604,33 @@ def main(args):
     #
     # Read in the files and store them.
     #
-    if len(instructions["gather"]) == 0 and instructions["postprocess"].action != "help":
+    if (
+        len(instructions["gather"]) == 0
+        and instructions["postprocess"].action != "help"
+    ):
         sys.stderr.write("WARNING: No files to read in.\n")
 
     if [_.filename for _ in instructions["gather"]].count("-") > 1:
-        raise Exception("Cannot have more than one instance of reading from stdin ('-').")
+        raise Exception(
+            "Cannot have more than one instance of reading from stdin ('-')."
+        )
 
-    list_of_data = [TabularFile.from_file(_.filename, alias=_.alias)
-                    for _ in instructions["gather"]]
+    list_of_data = [
+        TabularFile.from_file(_.filename, alias=_.alias) for _ in instructions["gather"]
+    ]
 
     #
     # Process
     #
     if len(instructions["process"]) > 0:
-        output = cat_control(list_of_data=list_of_data,
-                             args=instructions["process"])
+        output = cat_control(list_of_data=list_of_data, args=instructions["process"])
         list_of_data = [output]
 
     # It only really makes sense to output a single file.
     if len(list_of_data) > 1:
-        sys.stderr.write(f"WARNING: Discarding {len(list_of_data)-1} file(s) of data.\n")
+        sys.stderr.write(
+            f"WARNING: Discarding {len(list_of_data)-1} file(s) of data.\n"
+        )
     if len(list_of_data) == 0:
         sys.stderr.write(f"WARNING: No files read in.\n")
     output_data = list_of_data[0] if len(list_of_data) > 0 else None
@@ -620,10 +638,10 @@ def main(args):
     #
     # Postprocess
     #
-    if instructions["postprocess"].action == 'help':
+    if instructions["postprocess"].action == "help":
         print_help()
 
-    elif instructions["postprocess"].action == 'list':
+    elif instructions["postprocess"].action == "list":
         output_data.list_headers()
 
     elif instructions["postprocess"].action == "print":
@@ -635,13 +653,13 @@ def main(args):
 
     elif instructions["postprocess"].action == "output":
         delimiter = "," if instructions["postprocess"].argument.endswith(".csv") else ""
-        with open(instructions["postprocess"].argument, 'w') as F:
+        with open(instructions["postprocess"].argument, "w") as F:
             F.write(output_data.as_text(delimiter=delimiter))
         sys.stderr.write(f"Wrote data to {instructions['postprocess'].argument}\n")
 
-    elif instructions["postprocess"].action == 'assert':
+    elif instructions["postprocess"].action == "assert":
         val = eval_from_dict(output_data.content, instructions["postprocess"].argument)
-        return_code = (0 if bool(val) else 1)
+        return_code = 0 if bool(val) else 1
         sys.stderr.write(
             f"Thresh - Performing assert:\n"
             f"{instructions['postprocess'].argument}\n"
@@ -650,7 +668,7 @@ def main(args):
         )
         sys.exit(return_code)
 
-    elif instructions["postprocess"].action == 'burst':
+    elif instructions["postprocess"].action == "burst":
         raise NotImplementedError("'burst' not implemented.")
 
     else:
@@ -661,5 +679,5 @@ def main(args):
         )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(sys.argv[1:])
