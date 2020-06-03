@@ -65,9 +65,9 @@ db_postprocess = [
         "argument": ".txt",
     },
     {
-        "name": "check",
-        "args": "check \"this==that\"",
-        "action": "check",
+        "name": "assert",
+        "args": "assert \"this==that\"",
+        "action": "assert",
         "argument": "this==that",
     },
     {

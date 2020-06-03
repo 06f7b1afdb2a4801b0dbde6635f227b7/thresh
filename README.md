@@ -54,10 +54,10 @@ $ thresh data_1.txt cat \
 ```
 
 ```bash
-# Do a simple check on the data (return code 0 if True, 1 if False).
+# Do a simple assert on the data (return code 0 if True, 1 if False).
 $ thresh data_1.txt \
   cat 'stress_rate=np.diff(stress)/np.diff(time)' \
-  check 'np.max(np.abs(stress_rate)) < 2.0'
+  assert 'np.max(np.abs(stress_rate)) < 2.0'
 ```
 
 
@@ -168,22 +168,22 @@ $ thresh cat \
 ```
 
 
-### Performing a Check (Assert)
+### Performing an Assert
 
-In some instances, you will want to make checks on the data and get
-feedback in the form of a return code (like for automated tests). Only
-one check can be made, but compound statements are okay. The returned
-value is cast to a boolean and the program terminates with a return
-code of 0 if it evaluates to True and 1 if it evaluates to False.
+In some instances, you will want to make checks/asserts on the data and
+get feedback in the form of a return code (like for automated tests).
+Only one assert can be made, but compound statements are okay. The
+returned value is cast to a boolean and the program terminates with a
+return code of 0 if it evaluates to True and 1 if it evaluates to False.
 
 ```bash
-# Do a simple check on the data.
+# Do a simple assert on the data.
 $ thresh data_1.txt \
   cat 'stress_rate=np.diff(stress)/np.diff(time)' \
-  check 'np.max(np.abs(stress_rate)) < 2.0'
+  assert 'np.max(np.abs(stress_rate)) < 2.0'
 
 # Use a compound statement.
 $ thresh data_1.txt \
   cat 'stress_rate=np.diff(stress)/np.diff(time)' \
-  check 'np.max(np.abs(stress_rate)) < 2.0 and np.all(strain >= 0)'
+  assert 'np.max(np.abs(stress_rate)) < 2.0 and np.all(strain >= 0)'
 ```

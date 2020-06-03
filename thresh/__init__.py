@@ -31,7 +31,7 @@ from collections import OrderedDict, namedtuple
 from .tabular_file_container import TabularFile
 import numpy as np
 
-__version__ = (0, 0, 1)
+__version__ = (0, 0, 2)
 
 def print_help():
     print("""thresh (verb): to separate the wheat from the chaff.
@@ -88,10 +88,10 @@ $ thresh data_1.txt cat \
 ```
 
 ```bash
-# Do a simple check on the data (return code 0 if True, 1 if False).
+# Do a simple assert on the data (return code 0 if True, 1 if False).
 $ thresh data_1.txt \
   cat 'stress_rate=np.diff(stress)/np.diff(time)' \
-  check 'np.max(np.abs(stress_rate)) < 2.0'
+  assert 'np.max(np.abs(stress_rate)) < 2.0'
 ```
 
 
@@ -202,24 +202,24 @@ $ thresh cat \
 ```
 
 
-### Performing a Check (Assert)
+### Performing an Assert
 
-In some instances, you will want to make checks on the data and get
-feedback in the form of a return code (like for automated tests). Only
-one check can be made, but compound statements are okay. The returned
-value is cast to a boolean and the program terminates with a return
-code of 0 if it evaluates to True and 1 if it evaluates to False.
+In some instances, you will want to make checks/asserts on the data and
+get feedback in the form of a return code (like for automated tests).
+Only one assert can be made, but compound statements are okay. The
+returned value is cast to a boolean and the program terminates with a
+return code of 0 if it evaluates to True and 1 if it evaluates to False.
 
 ```bash
-# Do a simple check on the data.
+# Do a simple assert on the data.
 $ thresh data_1.txt \
   cat 'stress_rate=np.diff(stress)/np.diff(time)' \
-  check 'np.max(np.abs(stress_rate)) < 2.0'
+  assert 'np.max(np.abs(stress_rate)) < 2.0'
 
 # Use a compound statement.
 $ thresh data_1.txt \
   cat 'stress_rate=np.diff(stress)/np.diff(time)' \
-  check 'np.max(np.abs(stress_rate)) < 2.0 and np.all(strain >= 0)'
+  assert 'np.max(np.abs(stress_rate)) < 2.0 and np.all(strain >= 0)'
 ```
 """)
 
@@ -287,7 +287,7 @@ def parse_args(args_in):
             task = "cat"
             continue
 
-        elif arg in ["check", "output", "burst", "print"]:
+        elif arg in ["assert", "output", "burst", "print"]:
             stage = "postprocess"
             task = arg
             continue
@@ -314,7 +314,7 @@ def parse_args(args_in):
         elif task == "cat":
             instructions[stage].append(arg)
 
-        elif task in ["check", "output", "burst", "print"]:
+        elif task in ["assert", "output", "burst", "print"]:
             instructions[stage] = Postprocess(action=task, argument=arg)
             if len(args) != 0:
                 raise Exception(f"Unexpected extra arguments: {args}")
@@ -622,11 +622,11 @@ def main(args):
             F.write(output_data.as_text(delimiter=delimiter))
         sys.stderr.write(f"Wrote data to {instructions['postprocess'].argument}")
 
-    elif instructions["postprocess"].action == 'check':
+    elif instructions["postprocess"].action == 'assert':
         val = eval_from_dict(output_data.content, instructions["postprocess"].argument)
         return_code = (0 if bool(val) else 1)
         sys.stderr.write(
-            f"Thresh - Performing check:\n"
+            f"Thresh - Performing assert:\n"
             f"{instructions['postprocess'].argument}\n"
             f"Evaluated to {repr(val)} and {bool(val)} as a boolean.\n"
             f"Exiting with return code {return_code}.\n"
