@@ -42,8 +42,9 @@ $ thresh cat 'time=linspace(0,1,10)' 'wave=sin(t)'
 
 ```bash
 # Interpolate data.
-$ thresh data_1.txt \
-  cat 'time1=linspace(min(time),max(time),100)' 'stress1=interp(time1,time,stress)'
+$ thresh data_1.txt cat \
+  'time1=linspace(min(time),max(time),100)' \
+  'stress1=interp(time1,time,stress)'
 ```
 
 ```bash
@@ -126,7 +127,7 @@ $ thresh A=data_1.txt data_2.txt cat Atime strain stress sig
 ### Manipulating Columns
 ```bash
 # create a new file with a single column called 'mtime' which is
-# milliseconds (all equivalent)
+# milliseconds (all equivalent).
 $ thresh data_1.txt cat mtime=1000*time
 $ thresh A=data_1.txt cat mtime=1000*time
 $ thresh A=data_1.txt cat mtime=1000*Atime
@@ -142,7 +143,7 @@ $ thresh data_1.txt cat \
 
 ### Creating New Files With No Input File
 ```bash
-# Create a new file that with numbers and their squares
+# Create a new file that with numbers and their squares.
 $ thresh cat 't=arange(1,6,1)' 'squares=t**2'
    t  squares
    1        1
@@ -153,7 +154,7 @@ $ thresh cat 't=arange(1,6,1)' 'squares=t**2'
 ```
 
 ```bash
-# Create a new file that has a sine wave and a noisey sine wave
+# Create a new file that has a sine wave and a noisy sine wave.
 $ thresh cat \
   't=linspace(0.0,pi,100)' \
   'sine=sin(t)' \
