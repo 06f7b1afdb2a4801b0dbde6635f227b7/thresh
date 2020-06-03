@@ -187,3 +187,20 @@ $ thresh data_1.txt \
   cat 'stress_rate=np.diff(stress)/np.diff(time)' \
   assert 'np.max(np.abs(stress_rate)) < 2.0 and np.all(strain >= 0)'
 ```
+
+### Saving output
+Several different output formats are supported:
+
+```bash
+# Regular whitespace-delimited otuput to stdout
+$ thresh data_1.txt print
+
+# CSV output to stdout
+$ thresh data_1.txt print .csv
+
+# Regular whitespace-delimited otuput to foo.txt
+$ thresh data_1.txt output foo.txt
+
+# CSV output to foo.csv
+$ thresh data_1.txt print foo.csv
+```

@@ -221,6 +221,23 @@ $ thresh data_1.txt \
   cat 'stress_rate=np.diff(stress)/np.diff(time)' \
   assert 'np.max(np.abs(stress_rate)) < 2.0 and np.all(strain >= 0)'
 ```
+
+### Saving output
+Several different output formats are supported:
+
+```bash
+# Regular whitespace-delimited otuput to stdout
+$ thresh data_1.txt print
+
+# CSV output to stdout
+$ thresh data_1.txt print .csv
+
+# Regular whitespace-delimited otuput to foo.txt
+$ thresh data_1.txt output foo.txt
+
+# CSV output to foo.csv
+$ thresh data_1.txt print foo.csv
+```
 """)
 
 def parse_args(args_in):
@@ -620,7 +637,7 @@ def main(args):
         delimiter = "," if instructions["postprocess"].argument.endswith(".csv") else ""
         with open(instructions["postprocess"].argument, 'w') as F:
             F.write(output_data.as_text(delimiter=delimiter))
-        sys.stderr.write(f"Wrote data to {instructions['postprocess'].argument}")
+        sys.stderr.write(f"Wrote data to {instructions['postprocess'].argument}\n")
 
     elif instructions["postprocess"].action == 'assert':
         val = eval_from_dict(output_data.content, instructions["postprocess"].argument)
