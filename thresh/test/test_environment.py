@@ -103,21 +103,12 @@ def test_list_headers_default(capsys, tabularfile_2):
     """ Check the default behavior of the list_headers() function. """
     tabularfile_2.list_headers()
     out, err = capsys.readouterr()
-    assert out == "==> tabularfile_2 <==\n  1 time\n  2 strain\n  3 stress\n"
-    assert err == ""
-
-def test_list_headers_no_alias(capsys, tabularfile_2):
-    """ Check the non-default behavior of the list_headers() function. """
-    tabularfile_2.list_headers(print_alias=False)
-    out, err = capsys.readouterr()
-    assert out == "  1 time\n  2 strain\n  3 stress\n"
-    assert err == ""
-
-def test_list_headers_with_alias(capsys, tabularfile_2):
-    """ Check the non-default behavior of the list_headers() function. """
-    tabularfile_2.list_headers(print_alias=True)
-    out, err = capsys.readouterr()
-    assert out == "==> tabularfile_2 <==\n  1 time\n  2 strain\n  3 stress\n"
+    assert out == """ col | length | header
+----------------------
+   0 |      4 | time
+   1 |      4 | strain
+   2 |      4 | stress
+"""
     assert err == ""
 
 #
