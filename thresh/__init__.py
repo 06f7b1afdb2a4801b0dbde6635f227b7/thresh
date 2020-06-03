@@ -331,25 +331,39 @@ def verify_no_naming_collisions(list_of_data):
     This ensures that there are no ambiguous entries
     """
 
-    # Generate all the names
+    ambiguous_requests = set()
+
+    # Aliases are first-class citizens inside of thresh.
     aliases = set()
+    for dat in list_of_data:
+        if dat.alias is not None:
+            if dat.alias in aliases:
+                raise Exception(f"Repeated aliases detected: {dat.alias}")
+            aliases.add(dat.alias)
+
     column_names = set()
     aliased_column_names = set()
     for dat in list_of_data:
+        for colname in dat.content.keys():
+            # If a column name already exists then it's ambiguous.
+            if (colname in aliases
+                or colname in column_names
+                or colname in aliased_column_names
+                ):
+                ambiguous_requests.add(colname)
+            column_names.add(colname)
 
-        if dat.alias is not None:
-            aliases.add(dat.alias)
+            if dat.alias is None:
+                continue
 
-        for column_header in dat.content.keys():
-            column_names.add(column_header)
-            if dat.alias is not None:
-                aliased_column_names.add(dat.alias + column_header)
-
-    # Check for collisions between aliases and any column name
-    ambiguous_requests = set(list(aliases.intersection(column_names))
-                           + list(aliases.intersection(aliased_column_names))
-                           + list(column_names.intersection(aliased_column_names))
-                            )
+            # If an aliased column name already exists then it's ambiguous.
+            acolname = dat.alias + colname
+            if (acolname in aliases
+                or acolname in column_names
+                or acolname in aliased_column_names
+                ):
+                ambiguous_requests.add(acolname)
+            aliased_column_names.add(acolname)
 
     return aliases, column_names, aliased_column_names, ambiguous_requests
 
@@ -541,6 +555,13 @@ def cat_control(*, list_of_data, args):
 
     return TabularFile(content=output)
 
+
+def read_file(filename):
+    """
+    This is a wrapper function around TabularFile.from_file(filename)
+    and returns the dict of numpy arrays in .content.
+    """
+    return TabularFile.from_file(filename).content
 
 
 def main(args):
