@@ -8,24 +8,49 @@ Examples of possible operations are: extracting a single column from a file, mer
 ## Quick Start Examples
 
 ```bash
+# Read in a file and write it out in whitespace-delimited format.
+# using '-' as a filename instructs thresh to read from stdin.
+$ thresh data_1.txt
+$ cat data_1.txt | thresh -
+```
+
+```bash
+# See what columns are in a file.
 $ thresh data_1.txt list
 ```
 
 ```bash
-# Cat the only columns 'time' and 'stress'
+# Alias the file to A and print the whole file.
+$ thresh A=data_1.txt cat A
+
+# Cat only the columns 'time' and 'stress'.
+# (column headers are 'time' and 'stress' even when aliased)
 $ thresh data_1.txt cat time stress
+$ thresh A=data_1.txt cat Atime Astress
+
 # Cat the whole file, plus a millisecond column 'mtime'
 $ thresh A=data_1.txt cat A 'mtime=1000*time'
+
 # Cat the whole file, minus column 'stress'
 $ thresh A=data_1.txt cat A stress=None
 ```
 
 ```bash
-$ thresh cat 't=linspace(0,1,10)' 'sine=sin(t)'
+# Make an analytic solution with columns 'time' and 'wave'.
+$ thresh cat 'time=linspace(0,1,10)' 'wave=sin(t)'
 ```
 
 ```bash
-$ thresh data_1.txt cat 'time1=linspace(min(time),max(time),100)' 'stress1=interp(time1,time,stress)'
+# Interpolate data.
+$ thresh data_1.txt \
+  cat 'time1=linspace(min(time),max(time),100)' 'stress1=interp(time1,time,stress)'
+```
+
+```bash
+# Do a simple check on the data (return code 0 if True, 1 if False).
+$ thresh data_1.txt \
+  cat 'stress_rate=np.diff(stress)/np.diff(time)' \
+  check 'np.max(np.abs(stress_rate)) < 2.0'
 ```
 
 

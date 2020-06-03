@@ -422,7 +422,7 @@ def main(args):
     # Read in the files and store them.
     #
     if len(instructions["gather"]) == 0 and instructions["postprocess"].action != "help":
-        sys.stderr.write("WARNING: No files to read in.")
+        sys.stderr.write("WARNING: No files to read in.\n")
 
     if [_.filename for _ in instructions["gather"]].count("-") > 1:
         raise Exception("Cannot have more than one instance of reading from stdin ('-').")
@@ -440,9 +440,9 @@ def main(args):
 
     # It only really makes sense to output a single file.
     if len(list_of_data) > 1:
-        sys.stderr.write(f"WARNING: discarding {len(list_of_data)-1} files of data")
+        sys.stderr.write(f"WARNING: discarding {len(list_of_data)-1} files of data\n")
     if len(list_of_data) == 0:
-        sys.stderr.write(f"WARNING: No files read in.")
+        sys.stderr.write(f"WARNING: No files read in.\n")
     output_data = list_of_data[0] if len(list_of_data) > 0 else None
 
     #
