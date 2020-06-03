@@ -440,7 +440,7 @@ def main(args):
 
     # It only really makes sense to output a single file.
     if len(list_of_data) > 1:
-        sys.stderr.write(f"WARNING: discarding {len(list_of_data)-1} files of data\n")
+        sys.stderr.write(f"WARNING: Discarding {len(list_of_data)-1} file(s) of data.\n")
     if len(list_of_data) == 0:
         sys.stderr.write(f"WARNING: No files read in.\n")
     output_data = list_of_data[0] if len(list_of_data) > 0 else None

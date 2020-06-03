@@ -75,16 +75,17 @@ class TabularFile:
         self.content = OrderedDict(content.items())
 
 
-    def list_headers(self, *, print_alias=True):
+    def list_headers(self):
         """
         Print the list of headers and the header index of the TabularFile. The
         header index starts at 1, not 0.
         """
-        if print_alias:
-            print("==> {0} <==".format(self.alias))
 
+        header = f"{'col':>4s} | {'length':>6s} | {'header':<s}"
+        print(header)
+        print("-" * len(header))
         for idx, key in enumerate(self.content.keys()):
-            print("{0: 3d} {1:s}".format(idx+1, key))
+            print(f"{idx: 4d} | {len(self.content[key]): 6d} | {key:s}")
 
 
     def as_text(self, *, delimiter=""):

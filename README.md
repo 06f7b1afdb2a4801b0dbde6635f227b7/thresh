@@ -9,7 +9,7 @@ Examples of possible operations are: extracting a single column from a file, mer
 
 ```bash
 # Read in a file and write it out in whitespace-delimited format.
-# using '-' as a filename instructs thresh to read from stdin.
+# Using '-' as a filename instructs thresh to read from stdin.
 $ thresh data_1.txt
 $ cat data_1.txt | thresh -
 ```
@@ -24,7 +24,7 @@ $ thresh data_1.txt list
 $ thresh A=data_1.txt cat A
 
 # Cat only the columns 'time' and 'stress'.
-# (column headers are 'time' and 'stress' even when aliased)
+# (output column headers are 'time' and 'stress' even when aliased)
 $ thresh data_1.txt cat time stress
 $ thresh A=data_1.txt cat Atime Astress
 
@@ -57,37 +57,28 @@ $ thresh data_1.txt \
 ### Listing Column Headers
 
 ```bash
+# See all columns in a file.
 $ thresh column_data_1.txt list
-==> column_data_1.txt <==
- idx    name    alias    length
-   1    time                  5
-   2  strain                  5
-   3  stress                  5
+ col | length | header
+----------------------
+   0 |      4 | time
+   1 |      4 | strain
+   2 |      4 | stress
 ```
 
 ```bash
-$ thresh A=column_data_1.txt list
-==> column_data_1.txt <==
- idx    name    alias    length
-   1    time    Atime          5
-   2  strain  Astrain          5
-   3  stress  Astress          5
+# See the columns of the file you create.
+$ thresh A=data_1.txt cat A 'mtime=1000*time' list
+ col | length | header
+----------------------
+   0 |      4 | time
+   1 |      4 | strain
+   2 |      4 | stress
+   3 |      4 | mtime
 ```
 
+Note: you cannot `list` more than one file at a time.
 
-
-```bash
-$ thresh column_data_1.txt column_data_2.txt list
-==> column_data_1.txt <==
-  1 time
-  2 strain
-  3 stress
-
-==> column_data_2.txt <==
-  1 time
-  2 density
-  3 pressure
-```
 
 ## Wish List
 
