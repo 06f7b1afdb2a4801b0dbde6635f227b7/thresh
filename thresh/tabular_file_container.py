@@ -101,7 +101,11 @@ class TabularFile:
         text. This allows easy uniform printing to the terminal
         or to a file.
         """
-        n_chars_per_column = 23
+
+        # Ensure that the columns are wide enough for the longest header.
+        len_biggest_header = max(map(len, self.content.keys()))
+        n_chars_per_column = max(23, len_biggest_header + 1)
+
         n_chars_decimal = n_chars_per_column - 9
         strfmt = "{0:>" + str(n_chars_per_column) + "s}"
         fltfmt = "{0:+" + str(n_chars_per_column) + "." + str(n_chars_decimal) + "e}"
