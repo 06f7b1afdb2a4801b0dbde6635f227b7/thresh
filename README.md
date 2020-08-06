@@ -202,5 +202,22 @@ $ thresh data_1.txt print .csv
 $ thresh data_1.txt output foo.txt
 
 # CSV output to foo.csv
-$ thresh data_1.txt print foo.csv
+$ thresh data_1.txt output foo.csv
 ```
+
+### Manipulating columns with special characters
+Some column names will have special characters that would make the
+column name invalid in python syntax. The work-around requires that the
+file in question is aliased. The column is accessed in this manner:
+
+```bash
+$ thresh A=data.txt cat "good_name=__aliases['A']['-bad_name%']" assert "max(good_name) > 1"
+```
+
+Notes:
+* While columns with special names may be accessed this way, they
+  cannot be assigned in this way.
+* This is only available in the 'cat' section and not in the 'assert'
+  section. If you wish to access a "bad" column for assert, give it
+  a "good" name in the 'cat' section and use that name in the assert
+  section.

@@ -132,9 +132,9 @@ def test_assert1(capsys, thresh_files):
     assert "Evaluated to True" in err
 
 def test_assert2(capsys, thresh_files):
-    """ Test the behavior of the assert statement with __aliases object"""
+    """ Test the behavior of the assert statement with column accessed via __aliases object"""
 
-    args = ["A="+str(thresh_files["pass_a.txt"]), "assert", "max(__aliases['A']['a']) == 7"]
+    args = ["A="+str(thresh_files["pass_a.txt"]), "cat", "xyz=__aliases['A']['a']", "assert", "max(xyz) == 7"]
     thresh.main(args)
     out, err = capsys.readouterr()
     assert "Evaluated to True" in err

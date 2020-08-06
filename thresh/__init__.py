@@ -247,11 +247,16 @@ column name invalid in python syntax. The work-around requires that the
 file in question is aliased. The column is accessed in this manner:
 
 ```bash
-$ thresh A=data.txt cat "name=__alias['A']['-special_name%']"
+$ thresh A=data.txt cat "good_name=__aliases['A']['-bad_name%']" assert "max(good_name) > 1"
 ```
 
-Note: while columns with special names may be accessed this way, they
-cannot be assigned in this way.
+Notes:
+* While columns with special names may be accessed this way, they
+  cannot be assigned in this way.
+* This is only available in the 'cat' section and not in the 'assert'
+  section. If you wish to access a "bad" column for assert, give it
+  a "good" name in the 'cat' section and use that name in the assert
+  section.
 """
     )
 
@@ -488,6 +493,22 @@ def eval_from_dict(source, eval_str):
     return series
 
 
+def gen_aliases_object(*, list_of_data):
+    """
+    This function creates the __aliases object that enables access to
+    columns with bad column names.
+    """
+    obj = {}
+    for dat in list_of_data:
+        for column_name in dat.content.keys():
+            if dat.alias is None:
+                continue
+            if dat.alias not in obj:
+                obj[dat.alias] = {}
+            obj[dat.alias][column_name] = dat.content[column_name]
+    return obj
+
+
 def cat_control(*, list_of_data, args):
     """
     This function controls the behavior when 'cat' is invoked.
@@ -520,7 +541,7 @@ def cat_control(*, list_of_data, args):
     # If there is anything named "__aliases", don't populate the special object.
     include_aliases_dict = ("__aliases" not in (column_names | aliased_column_names | ambiguous_requests))
     if include_aliases_dict:
-        input_source["__aliases"] = {}
+        input_source["__aliases"] = gen_aliases_object(list_of_data=list_of_data)
     else:
         generic_warn(
             "detected column named '__aliases'."
@@ -534,11 +555,6 @@ def cat_control(*, list_of_data, args):
 
             if dat.alias is not None and dat.alias + column_name in unique_columns:
                 input_source[dat.alias + column_name] = dat.content[column_name]
-
-            if include_aliases_dict and dat.alias is not None:
-                if dat.alias not in input_source["__aliases"]:
-                    input_source["__aliases"][dat.alias] = {}
-                input_source["__aliases"][dat.alias][column_name] = dat.content[column_name]
 
     # If no arguments are given, include every column without checking for ambiguities
     if len(args) == 0:
