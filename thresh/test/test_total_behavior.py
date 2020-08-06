@@ -70,6 +70,7 @@ def test_cat2(capsys, thresh_files, args):
                                   ' A d=Aa+b',
                                   ' A d=a+Ab',
                                   ' A d=Aa+Ab',
+                                  ' A d=Aa+__aliases[\"A\"][\"b\"]',
                                   ' a b c d=a+b',
                                   ' a b c d=Aa+b',
                                   ' a b c d=a+Ab',
@@ -120,3 +121,20 @@ def test_cat5(capsys, thresh_files):
   +3.00000000000000e+00  +4.00000000000000e+00
   +7.00000000000000e+00  +1.00000000000000e+00
 """
+
+
+def test_assert1(capsys, thresh_files):
+    """ Test the behavior of the assert statement """
+
+    args = ["A="+str(thresh_files["pass_a.txt"]), "assert", "max(a) == 7"]
+    thresh.main(args)
+    out, err = capsys.readouterr()
+    assert "Evaluated to True" in err
+
+def test_assert2(capsys, thresh_files):
+    """ Test the behavior of the assert statement with __aliases object"""
+
+    args = ["A="+str(thresh_files["pass_a.txt"]), "assert", "max(__aliases['A']['a']) == 7"]
+    thresh.main(args)
+    out, err = capsys.readouterr()
+    assert "Evaluated to True" in err

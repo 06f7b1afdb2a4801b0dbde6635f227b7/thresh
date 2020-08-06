@@ -68,6 +68,19 @@ base_files = {
             ("i", np.array([1, 2, 5, 2, 5], dtype=float)),
         ))
     ],
+    "pass_e.txt": [
+        (
+            "g\n"
+            "4\n"
+            "8\n"
+            "7\n"
+            "4\n"
+            "4\n"
+        ),
+        OrderedDict((
+            ("g", np.array([4, 8, 7, 4, 4], dtype=float)),
+        ))
+    ],
 }
 
 

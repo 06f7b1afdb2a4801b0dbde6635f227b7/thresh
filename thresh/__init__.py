@@ -238,8 +238,20 @@ $ thresh data_1.txt print .csv
 $ thresh data_1.txt output foo.txt
 
 # CSV output to foo.csv
-$ thresh data_1.txt print foo.csv
+$ thresh data_1.txt output foo.csv
 ```
+
+### Manipulating columns with special characters
+Some column names will have special characters that would make the
+column name invalid in python syntax. The work-around requires that the
+file in question is aliased. The column is accessed in this manner:
+
+```bash
+$ thresh A=data.txt cat "name=__alias['A']['-special_name%']"
+```
+
+Note: while columns with special names may be accessed this way, they
+cannot be assigned in this way.
 """
     )
 
@@ -489,11 +501,14 @@ def cat_control(*, list_of_data, args):
     have a unique header for the output.
     """
 
+    def generic_warn(msg):
+        sys.stderr.write("WARNING: {0}\n".format(msg))
+
     def clobber_warn(label):
-        sys.stderr.write("WARNING: clobbering column '{0}'\n".format(label))
+        generic_warn("clobbering column '{0}'.".format(label))
 
     def remove_warn(label):
-        sys.stderr.write("WARNING: removing column '{0}'\n".format(label))
+        generic_warn("removing column '{0}'.".format(label))
 
     a = verify_no_naming_collisions(list_of_data)
     aliases, column_names, aliased_column_names, ambiguous_requests = a
@@ -501,12 +516,29 @@ def cat_control(*, list_of_data, args):
     # Load the unique columns
     unique_columns = (column_names | aliased_column_names) - ambiguous_requests
     input_source = {}
+
+    # If there is anything named "__aliases", don't populate the special object.
+    include_aliases_dict = ("__aliases" not in (column_names | aliased_column_names | ambiguous_requests))
+    if include_aliases_dict:
+        input_source["__aliases"] = {}
+    else:
+        generic_warn(
+            "detected column named '__aliases'."
+            " Will not populate special object of same name."
+        )
+
     for dat in list_of_data:
         for column_name in dat.content.keys():
             if column_name in unique_columns:
                 input_source[column_name] = dat.content[column_name]
+
             if dat.alias is not None and dat.alias + column_name in unique_columns:
                 input_source[dat.alias + column_name] = dat.content[column_name]
+
+            if include_aliases_dict and dat.alias is not None:
+                if dat.alias not in input_source["__aliases"]:
+                    input_source["__aliases"][dat.alias] = {}
+                input_source["__aliases"][dat.alias][column_name] = dat.content[column_name]
 
     # If no arguments are given, include every column without checking for ambiguities
     if len(args) == 0:
@@ -666,7 +698,7 @@ def main(args):
             f"Evaluated to {repr(val)} and {bool(val)} as a boolean.\n"
             f"Exiting with return code {return_code}.\n"
         )
-        sys.exit(return_code)
+        return return_code
 
     elif instructions["postprocess"].action == "burst":
         raise NotImplementedError("'burst' not implemented.")
@@ -678,6 +710,9 @@ def main(args):
             f" argument={repr(instructions['postprocess'].argument)}"
         )
 
+    return 0
+
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    retcode = main(sys.argv[1:])
+    sys.exit(retcode)

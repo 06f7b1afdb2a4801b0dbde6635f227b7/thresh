@@ -226,6 +226,9 @@ class TabularFile:
 
         # Read the data
         data = np.genfromtxt(lines, skip_header=1, unpack=True, delimiter=delimiter)
+        if len(data.shape) == 1:
+            # One column of data (1D). Need to make the array 2D.
+            data = np.array([data,])
 
         # Put it together
         content = OrderedDict(zip(head, data))
