@@ -138,3 +138,19 @@ def test_assert2(capsys, thresh_files):
     thresh.main(args)
     out, err = capsys.readouterr()
     assert "Evaluated to True" in err
+
+def test_assert3(capsys, thresh_files):
+    """ Test the behavior of the assert statement with no data given (expect fail)"""
+
+    args = ["assert", "np.pi == 3"]
+    thresh.main(args)
+    out, err = capsys.readouterr()
+    assert "Evaluated to False" in err
+
+def test_assert4(capsys, thresh_files):
+    """ Test the behavior of the assert statement with no data given (expect pass)"""
+
+    args = ["assert", "sum([1,2]) == 3"]
+    thresh.main(args)
+    out, err = capsys.readouterr()
+    assert "Evaluated to True" in err

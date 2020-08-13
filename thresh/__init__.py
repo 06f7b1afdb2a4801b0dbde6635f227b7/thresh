@@ -706,7 +706,18 @@ def main(args):
         sys.stderr.write(f"Wrote data to {instructions['postprocess'].argument}\n")
 
     elif instructions["postprocess"].action == "assert":
-        val = eval_from_dict(output_data.content, instructions["postprocess"].argument)
+
+        # Allow for the possibility that we don't have any data to
+        # operate on (like doing `thresh assert "$VAL==$OTHER_VAL"`)
+        if hasattr(output_data, "content"):
+            eval_data = output_data.content
+        else:
+            eval_data = OrderedDict()
+
+        val = eval_from_dict(
+            eval_data,
+            instructions["postprocess"].argument,
+        )
         return_code = 0 if bool(val) else 1
         sys.stderr.write(
             f"Thresh - Performing assert:\n"
