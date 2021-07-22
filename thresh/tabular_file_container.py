@@ -206,6 +206,7 @@ class TabularFile:
 
         lines = cls.format_if_history_file(lines)
         head = lines[0].rstrip().split(delimiter)
+        head = [_.strip() for _ in head]
 
         def can_convert_to_float(x):
             try:
