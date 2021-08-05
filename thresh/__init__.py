@@ -208,15 +208,23 @@ $ thresh cat \
 
 In some instances, you will want to make checks/asserts on the data and
 get feedback in the form of a return code (like for automated tests).
-Only one assert can be made, but compound statements are okay. The
-returned value is cast to a boolean and the program terminates with a
-return code of 0 if it evaluates to True and 1 if it evaluates to False.
+One or more assert statements can be made and compound statements are
+okay. The returned value is cast to a boolean and the program terminates
+with a return code of 0 if it evaluates to True and 1 if it evaluates to
+False.
 
 ```bash
 # Do a simple assert on the data.
 $ thresh data_1.txt \
   cat 'stress_rate=np.diff(stress)/np.diff(time)' \
   assert 'np.max(np.abs(stress_rate)) < 2.0'
+
+# Use multiple asserts.
+$ thresh data_1.txt \
+  cat 'stress_rate=np.diff(stress)/np.diff(time)' \
+  assert \
+    'np.max(np.abs(stress_rate)) < 2.0' \
+    'np.all(strain >= 0)'
 
 # Use a compound statement.
 $ thresh data_1.txt \
@@ -355,7 +363,16 @@ def parse_args(args_in):
         elif task == "cat":
             instructions[stage].append(arg)
 
-        elif task in ["assert", "output", "burst", "print"]:
+        elif task == "assert":
+            if instructions[stage].action != "assert":
+                instructions[stage] = Postprocess(action=task, argument=[arg,])
+            else:
+                instructions[stage] = Postprocess(
+                    action=task,
+                    argument=instructions[stage].argument + [arg,],
+                )
+
+        elif task in ["output", "burst", "print"]:
             instructions[stage] = Postprocess(action=task, argument=arg)
             if len(args) != 0:
                 raise Exception(f"Unexpected extra arguments: {args}")
@@ -714,17 +731,20 @@ def main(args):
         else:
             eval_data = OrderedDict()
 
-        val = eval_from_dict(
-            eval_data,
-            instructions["postprocess"].argument,
-        )
-        return_code = 0 if bool(val) else 1
-        sys.stderr.write(
-            f"Thresh - Performing assert:\n"
-            f"{instructions['postprocess'].argument}\n"
-            f"Evaluated to {repr(val)} and {bool(val)} as a boolean.\n"
-            f"Exiting with return code {return_code}.\n"
-        )
+        return_code = 0
+        sys.stderr.write(f"Thresh - Performing assert:\n")
+        for assert_statement in instructions["postprocess"].argument:
+            val = eval_from_dict(
+                eval_data,
+                assert_statement,
+            )
+            return_code = max(return_code, 0 if bool(val) else 1)
+            sys.stderr.write(
+                f"{repr(assert_statement)} --> {repr(val)}\n"
+                f"    Evaluated to {repr(val)} and {bool(val)} when converted to a boolean.\n"
+                f"    Assert {'PASS' if bool(val) else 'FAIL'}\n"
+            )
+        sys.stderr.write(f"Exiting with return code {return_code}.\n")
         return return_code
 
     elif instructions["postprocess"].action == "burst":

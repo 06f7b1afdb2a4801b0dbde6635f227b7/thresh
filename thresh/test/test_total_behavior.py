@@ -127,30 +127,53 @@ def test_assert1(capsys, thresh_files):
     """ Test the behavior of the assert statement """
 
     args = ["A="+str(thresh_files["pass_a.txt"]), "assert", "max(a) == 7"]
-    thresh.main(args)
+    retcode = thresh.main(args)
     out, err = capsys.readouterr()
     assert "Evaluated to True" in err
+    assert retcode == 0
 
 def test_assert2(capsys, thresh_files):
     """ Test the behavior of the assert statement with column accessed via __aliases object"""
 
     args = ["A="+str(thresh_files["pass_a.txt"]), "cat", "xyz=__aliases['A']['a']", "assert", "max(xyz) == 7"]
-    thresh.main(args)
+    retcode = thresh.main(args)
     out, err = capsys.readouterr()
     assert "Evaluated to True" in err
+    assert retcode == 0
 
 def test_assert3(capsys, thresh_files):
     """ Test the behavior of the assert statement with no data given (expect fail)"""
 
     args = ["assert", "np.pi == 3"]
-    thresh.main(args)
+    retcode = thresh.main(args)
     out, err = capsys.readouterr()
     assert "Evaluated to False" in err
+    assert retcode == 1
 
 def test_assert4(capsys, thresh_files):
     """ Test the behavior of the assert statement with no data given (expect pass)"""
 
     args = ["assert", "sum([1,2]) == 3"]
-    thresh.main(args)
+    retcode = thresh.main(args)
     out, err = capsys.readouterr()
     assert "Evaluated to True" in err
+    assert retcode == 0
+
+def test_assert5(capsys):
+    """ Test the behavior of multiple assert statements with no data given (expect pass)"""
+
+    args = ["assert", "sum([1,2]) == 3", "np.pi != 3.0"]
+    retcode = thresh.main(args)
+    out, err = capsys.readouterr()
+    assert "Evaluated to True" in err
+    assert retcode == 0
+
+def test_assert6(capsys):
+    """ Test the behavior of multiple assert statements with no data given (expect fail)"""
+
+    args = ["assert", "sum([1,2]) == 3", "np.pi == 3.0"]
+    retcode = thresh.main(args)
+    out, err = capsys.readouterr()
+    assert "Evaluated to True" in err
+    assert "Evaluated to False" in err
+    assert retcode == 1

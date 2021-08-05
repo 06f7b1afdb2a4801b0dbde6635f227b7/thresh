@@ -68,7 +68,13 @@ db_postprocess = [
         "name": "assert",
         "args": "assert \"this==that\"",
         "action": "assert",
-        "argument": "this==that",
+        "argument": ["this==that",],
+    },
+    {
+        "name": "assert",
+        "args": "assert \"this==that\" \"fizz != buzz\"",
+        "action": "assert",
+        "argument": ["this==that", "fizz != buzz",],
     },
     {
         "name": "output",
