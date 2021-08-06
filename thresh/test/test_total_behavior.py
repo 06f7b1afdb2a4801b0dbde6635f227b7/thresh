@@ -17,6 +17,19 @@ import basic_files
 import thresh
 
 #
+# headerlist
+#
+
+def test_headerlist1(capsys, thresh_files):
+    """ Test the behavior of headerlist"""
+
+    args = [thresh_files["pass_a.txt"], "headerlist"]
+    retcode = thresh.main(args)
+    out, err = capsys.readouterr()
+    assert "a\nb\nc\n" == out
+    assert retcode == 0
+
+#
 #  cat
 #
 

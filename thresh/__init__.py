@@ -57,8 +57,13 @@ $ cat data_1.txt | thresh -
 ```
 
 ```bash
-# See what columns are in a file.
+# See what columns are in a file in human-readable format.
 $ thresh data_1.txt list
+```
+
+```bash
+# Print column names, one per line.
+$ thresh data_1.txt headerlist
 ```
 
 ```bash
@@ -100,7 +105,15 @@ $ thresh data_1.txt \
 ### Listing Column Headers
 
 ```bash
-# See all columns in a file.
+# See all columns in a file in a simple list.
+$ thresh column_data_1.txt headerlist
+time
+strain
+stress
+```
+
+```bash
+# See all columns in a file with extra info in human-readable format.
 $ thresh column_data_1.txt list
  col | length | header
 ----------------------
@@ -122,6 +135,13 @@ $ thresh A=data_1.txt cat A 'mtime=1000*time' list
 
 Note: you cannot `list` more than one file at a time.
 
+```bash
+# loop over headers.
+$ thresh column_data_1.txt headerlist | while read COL; do echo Found column $COL; done
+Found column time
+Found column strain
+Found column stress
+```
 
 ### Extracting Columns: Rules
 
@@ -294,7 +314,8 @@ def parse_args(args_in):
 
     2) a token specifying the task to be done with the files. Currently,
        the only tokens recognized are:
-       * "list"  --> list headers
+       * "list"  --> list headers with extra, human-readable info
+       * "headerlist"  --> list headers, one per line
        * "cat"   --> cat together and output
        * "burst" --> split each column into its own file
        * "help"  --> user requested the help message; do nothing
@@ -339,7 +360,7 @@ def parse_args(args_in):
             task = arg
             continue
 
-        elif arg in ["list"]:
+        elif arg in ["list", "headerlist"]:
             stage = "postprocess"
             task = arg
             instructions[stage] = Postprocess(action=task, argument=None)
@@ -708,6 +729,9 @@ def main(args):
 
     elif instructions["postprocess"].action == "list":
         output_data.list_headers()
+
+    elif instructions["postprocess"].action == "headerlist":
+        output_data.basic_list_headers()
 
     elif instructions["postprocess"].action == "print":
         # If you're trying to fix the warnings and the bad exit code

@@ -53,6 +53,12 @@ db_postprocess = [
         "argument": None,
     },
     {
+        "name": "headerlist",
+        "args": "headerlist",
+        "action": "headerlist",
+        "argument": None,
+    },
+    {
         "name": "print",
         "args": "print .csv",
         "action": "print",

@@ -112,6 +112,21 @@ def test_list_headers_default(capsys, tabularfile_2):
     assert err == ""
 
 #
+#  TabularFile.basic_list_headers()
+#
+
+def test_basic_list_headers_default(capsys, tabularfile_2):
+    """ Check the default behavior of the basic_list_headers() function. """
+    tabularfile_2.basic_list_headers()
+    out, err = capsys.readouterr()
+    assert out == """time
+strain
+stress
+"""
+    assert err == ""
+
+
+#
 #  TabularFile.as_text()
 #
 def test_as_text_default(tabularfile_3):

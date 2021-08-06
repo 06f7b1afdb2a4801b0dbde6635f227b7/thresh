@@ -95,6 +95,15 @@ class TabularFile:
         for idx, key in enumerate(self.content.keys()):
             print(f"{idx: 4d} | {len(self.content[key]): 6d} | {key:s}")
 
+    def basic_list_headers(self):
+        """
+        Print all the headers, one per line. This minimally-formatted option
+        enables looping over headers in bash for-loops and other scripting
+        fun.
+        """
+        for key in self.content.keys():
+            print(key)
+
     def as_text(self, *, delimiter=""):
         """
         Compile the contents of the TabularFile and return as

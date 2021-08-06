@@ -21,8 +21,13 @@ $ cat data_1.txt | thresh -
 ```
 
 ```bash
-# See what columns are in a file.
+# See what columns are in a file in human-readable format.
 $ thresh data_1.txt list
+```
+
+```bash
+# Print column names, one per line.
+$ thresh data_1.txt headerlist
 ```
 
 ```bash
@@ -48,23 +53,27 @@ $ thresh cat 'time=linspace(0,1,10)' 'wave=sin(t)'
 
 ```bash
 # Interpolate data.
-$ thresh data_1.txt cat \
-  'time1=linspace(min(time),max(time),100)' \
-  'stress1=interp(time1,time,stress)'
+$ thresh data_1.txt cat   'time1=linspace(min(time),max(time),100)'   'stress1=interp(time1,time,stress)'
 ```
 
 ```bash
 # Do a simple assert on the data (return code 0 if True, 1 if False).
-$ thresh data_1.txt \
-  cat 'stress_rate=np.diff(stress)/np.diff(time)' \
-  assert 'np.max(np.abs(stress_rate)) < 2.0'
+$ thresh data_1.txt   cat 'stress_rate=np.diff(stress)/np.diff(time)'   assert 'np.max(np.abs(stress_rate)) < 2.0'
 ```
 
 
 ### Listing Column Headers
 
 ```bash
-# See all columns in a file.
+# See all columns in a file in a simple list.
+$ thresh column_data_1.txt headerlist
+time
+strain
+stress
+```
+
+```bash
+# See all columns in a file with extra info in human-readable format.
 $ thresh column_data_1.txt list
  col | length | header
 ----------------------
@@ -86,6 +95,13 @@ $ thresh A=data_1.txt cat A 'mtime=1000*time' list
 
 Note: you cannot `list` more than one file at a time.
 
+```bash
+# loop over headers.
+$ thresh column_data_1.txt headerlist | while read COL; do echo Found column $COL; done
+Found column time
+Found column strain
+Found column stress
+```
 
 ### Extracting Columns: Rules
 
@@ -140,10 +156,7 @@ $ thresh A=data_1.txt cat mtime=1000*Atime
 
 # Create a new column based on data from a file and then use that
 # new column to create another column.
-$ thresh data_1.txt cat \
-  'dstress=np.diff(stress)' \
-  'dt=np.diff(time)' \
-  'stress_rate=dstress / dt'
+$ thresh data_1.txt cat   'dstress=np.diff(stress)'   'dt=np.diff(time)'   'stress_rate=dstress / dt'
 ```
 
 
@@ -161,10 +174,7 @@ $ thresh cat 't=arange(1,6,1)' 'squares=t**2'
 
 ```bash
 # Create a new file that has a sine wave and a noisy sine wave.
-$ thresh cat \
-  't=linspace(0.0,pi,100)' \
-  'sine=sin(t)' \
-  'noisey=sine+random.uniform(-1.0,1.0,len(sine))'
+$ thresh cat   't=linspace(0.0,pi,100)'   'sine=sin(t)'   'noisey=sine+random.uniform(-1.0,1.0,len(sine))'
 ```
 
 
@@ -172,20 +182,20 @@ $ thresh cat \
 
 In some instances, you will want to make checks/asserts on the data and
 get feedback in the form of a return code (like for automated tests).
-Only one assert can be made, but compound statements are okay. The
-returned value is cast to a boolean and the program terminates with a
-return code of 0 if it evaluates to True and 1 if it evaluates to False.
+One or more assert statements can be made and compound statements are
+okay. The returned value is cast to a boolean and the program terminates
+with a return code of 0 if it evaluates to True and 1 if it evaluates to
+False.
 
 ```bash
 # Do a simple assert on the data.
-$ thresh data_1.txt \
-  cat 'stress_rate=np.diff(stress)/np.diff(time)' \
-  assert 'np.max(np.abs(stress_rate)) < 2.0'
+$ thresh data_1.txt   cat 'stress_rate=np.diff(stress)/np.diff(time)'   assert 'np.max(np.abs(stress_rate)) < 2.0'
+
+# Use multiple asserts.
+$ thresh data_1.txt   cat 'stress_rate=np.diff(stress)/np.diff(time)'   assert     'np.max(np.abs(stress_rate)) < 2.0'     'np.all(strain >= 0)'
 
 # Use a compound statement.
-$ thresh data_1.txt \
-  cat 'stress_rate=np.diff(stress)/np.diff(time)' \
-  assert 'np.max(np.abs(stress_rate)) < 2.0 and np.all(strain >= 0)'
+$ thresh data_1.txt   cat 'stress_rate=np.diff(stress)/np.diff(time)'   assert 'np.max(np.abs(stress_rate)) < 2.0 and np.all(strain >= 0)'
 ```
 
 ### Saving output
@@ -221,3 +231,4 @@ Notes:
   section. If you wish to access a "bad" column for assert, give it
   a "good" name in the 'cat' section and use that name in the assert
   section.
+
