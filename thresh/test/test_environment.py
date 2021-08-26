@@ -132,17 +132,20 @@ stress
 def test_as_text_default(tabularfile_3):
     """ Verifies the conversion to text with default delimiter. """
     txt = tabularfile_3.as_text()
-    assert txt == '                   var1                   var2\n  +1.57079632679490e+00  +1.11111111111111e-01\n  +3.14159265358979e+00  +2.22222222222222e-01\n  +4.71238898038469e+00  +3.33333333333333e-01\n'
+    print("comp", repr(txt))
+    assert txt == '                      var1                      var2\n  +1.57079632679489656e+00  +1.11111111111111105e-01\n  +3.14159265358979312e+00  +2.22222222222222210e-01\n  +4.71238898038468967e+00  +3.33333333333333315e-01\n'
 
 def test_as_text_whitespace_delimiter(tabularfile_3):
     """ Verifies the conversion to text with whitespace delimiter. """
     txt = tabularfile_3.as_text(delimiter='')
-    assert txt == '                   var1                   var2\n  +1.57079632679490e+00  +1.11111111111111e-01\n  +3.14159265358979e+00  +2.22222222222222e-01\n  +4.71238898038469e+00  +3.33333333333333e-01\n'
+    print("comp", repr(txt))
+    assert txt == '                      var1                      var2\n  +1.57079632679489656e+00  +1.11111111111111105e-01\n  +3.14159265358979312e+00  +2.22222222222222210e-01\n  +4.71238898038468967e+00  +3.33333333333333315e-01\n'
 
 def test_as_text_comma_delimiter(tabularfile_3):
     """ Verifies the conversion to text with comma delimiter. """
     txt = tabularfile_3.as_text(delimiter=',')
-    assert txt == '                   var1,                   var2\n  +1.57079632679490e+00,  +1.11111111111111e-01\n  +3.14159265358979e+00,  +2.22222222222222e-01\n  +4.71238898038469e+00,  +3.33333333333333e-01\n'
+    print("comp", repr(txt))
+    assert txt == '                      var1,                      var2\n  +1.57079632679489656e+00,  +1.11111111111111105e-01\n  +3.14159265358979312e+00,  +2.22222222222222210e-01\n  +4.71238898038468967e+00,  +3.33333333333333315e-01\n'
 
 #
 #  TabularFile.from_file()

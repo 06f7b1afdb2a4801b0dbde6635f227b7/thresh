@@ -111,11 +111,14 @@ class TabularFile:
         or to a file.
         """
 
+        # Requres 17 digits to prefectly re-create a double in-memory.
+        n_chars_decimal = 17
+        len_biggest_number = len("+1." + n_chars_decimal * "0" + "e+301")
+
         # Ensure that the columns are wide enough for the longest header.
         len_biggest_header = max(map(len, self.content.keys()))
-        n_chars_per_column = max(23, len_biggest_header + 1)
+        n_chars_per_column = max(len_biggest_number, len_biggest_header) + 1
 
-        n_chars_decimal = n_chars_per_column - 9
         strfmt = "{0:>" + str(n_chars_per_column) + "s}"
         fltfmt = "{0:+" + str(n_chars_per_column) + "." + str(n_chars_decimal) + "e}"
 
