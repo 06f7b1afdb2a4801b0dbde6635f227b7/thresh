@@ -667,7 +667,12 @@ def cat_control(*, list_of_data, args):
         else:
             raise Exception("Alias/column not found: '{0}'".format(arg))
 
-    return TabularFile(content=output)
+    # We want the namespace we were working with so that it can be used in the
+    # assert statement.
+    namespace = OrderedDict(input_source)
+    namespace.update(output)
+
+    return TabularFile(content=output), namespace
 
 
 def read_file(filename):
@@ -706,17 +711,34 @@ def main(args):
     ]
 
     #
+    # Doing the things that don't require processing.
+    #
+    if instructions["postprocess"].action == "help":
+        print_help()
+        return 0
+
+    elif instructions["postprocess"].action in ["list", "headerlist"]:
+        # Make sure we're only dealing with one file.
+        if len(list_of_data) == 0:
+            sys.stderr.write(f"ERROR: No file given - nothing to list\n")
+            return 1
+        elif len(list_of_data) > 1:
+            sys.stderr.write(f"ERROR: Can only list one file at a time, got {len(list_of_data)}.\n")
+            return 1
+
+        if instructions["postprocess"].action == "list":
+            list_of_data[0].list_headers()
+        elif instructions["postprocess"].action == "headerlist":
+            list_of_data[0].basic_list_headers()
+
+        return 0
+
+    #
     # Process
     #
-    if len(instructions["process"]) > 0:
-        output = cat_control(list_of_data=list_of_data, args=instructions["process"])
-        list_of_data = [output]
+    output, namespace = cat_control(list_of_data=list_of_data, args=instructions["process"])
+    list_of_data = [output]
 
-    # It only really makes sense to output a single file.
-    if len(list_of_data) > 1:
-        sys.stderr.write(
-            f"WARNING: Discarding {len(list_of_data)-1} file(s) of data.\n"
-        )
     if len(list_of_data) == 0:
         sys.stderr.write(f"WARNING: No files read in.\n")
     output_data = list_of_data[0] if len(list_of_data) > 0 else None
@@ -724,16 +746,8 @@ def main(args):
     #
     # Postprocess
     #
-    if instructions["postprocess"].action == "help":
-        print_help()
 
-    elif instructions["postprocess"].action == "list":
-        output_data.list_headers()
-
-    elif instructions["postprocess"].action == "headerlist":
-        output_data.basic_list_headers()
-
-    elif instructions["postprocess"].action == "print":
+    if instructions["postprocess"].action == "print":
         # If you're trying to fix the warnings and the bad exit code
         # when this gets piped to `head`, stop trying. You can't fix
         # it. Python is just dies noisily when `head` closes the pipe.
@@ -754,6 +768,7 @@ def main(args):
             eval_data = output_data.content
         else:
             eval_data = OrderedDict()
+        eval_data = namespace
 
         return_code = 0
         sys.stderr.write(f"Thresh - Performing assert:\n")

@@ -34,12 +34,13 @@ class TabularFile:
     The basic representation of tabular files.
     """
 
-    def __init__(self, *, content=None, alias=None):
+    def __init__(self, *, content=None, alias=None, name=None):
         """
         A file, as represented in thresh, requires only two descriptors, the
         alias and the data itself. As the data has headers and columns it only
         seemed reasonable to store it as an OrderedDict of Numpy arrays.
 
+        self.name = str or None
         self.alias = str or None
         self.content = OrderedDict((
                        ('Column1', np.array([ 0.0, 1.0, 2.0])),
@@ -58,6 +59,13 @@ class TabularFile:
                 "Variable 'alias' is not of type str or None: {0}".format(type(alias))
             )
         self.alias = alias
+
+        # Process 'name'. Must be either 'str' or 'None'
+        if not isinstance(name, str) and name is not None:
+            raise TypeError(
+                "Variable 'name' is not of type str or None: {0}".format(type(name))
+            )
+        self.name = name
 
         # 'content' must be 'OrderedDict'
         if not isinstance(content, OrderedDict):
@@ -246,4 +254,4 @@ class TabularFile:
         # Put it together
         content = OrderedDict(zip(head, data))
 
-        return cls(content=content, alias=alias)
+        return cls(content=content, alias=alias, name=str(filename))

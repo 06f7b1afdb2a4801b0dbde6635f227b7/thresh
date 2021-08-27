@@ -190,3 +190,32 @@ def test_assert6(capsys):
     assert "Evaluated to True" in err
     assert "Evaluated to False" in err
     assert retcode == 1
+
+
+
+@pytest.mark.parametrize('args', [
+    ["assert", "sum(a) == 18"],
+    ["assert", "sum(Aa) == 18"],
+    ["cat", "assert", "sum(a) == 18"],
+    ["cat", "assert", "sum(Aa) == 18"],
+    ["cat", "A", "assert", "sum(a) == 18"],
+    ["cat", "A", "assert", "sum(Aa) == 18"],
+    ["assert", "sum(a) == 18", "max(b) != 3.1"],
+    ["assert", "sum(Aa) == 18", "max(Ab) != 3.1"],
+    ["cat", "assert", "sum(a) == 18", "max(b) != 3.1"],
+    ["cat", "assert", "sum(Aa) == 18", "max(Ab) != 3.1"],
+    ["cat", "A", "assert", "sum(a) == 18", "max(b) != 3.1"],
+    ["cat", "A", "assert", "sum(Aa) == 18", "max(Ab) != 3.1"],
+])
+def test_populate_namespace(capsys, thresh_files, args):
+    """ Test to make sure we auto-populate the namespace if you don't name anything """
+
+    args = ["A="+str(thresh_files["pass_a.txt"]),] + args
+    retcode = thresh.main(args)
+    out, err = capsys.readouterr()
+    print("retcode", retcode)
+    print("out", out)
+    print("err", err)
+    assert "Evaluated to True" in err
+    assert "Evaluated to False" not in err
+    assert retcode == 0
