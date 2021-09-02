@@ -24,6 +24,7 @@
 TODO
 """
 import sys
+import json
 import pathlib
 import numpy as np
 from collections import OrderedDict
@@ -34,7 +35,7 @@ class TabularFile:
     The basic representation of tabular files.
     """
 
-    def __init__(self, *, content=None, alias=None, name=None):
+    def __init__(self, *, content=None, alias=None, name=None, namespace_only=False, length_check=True):
         """
         A file, as represented in thresh, requires only two descriptors, the
         alias and the data itself. As the data has headers and columns it only
@@ -48,6 +49,14 @@ class TabularFile:
                        ('Column3', np.array([-3.0, 1.4, 1.5])),
                                    )) or None
         """
+
+        if not isinstance(namespace_only, bool):
+            raise TypeError(f"`namespace_only` must be of type bool, not {type(namespace_only)}.")
+        self.namespace_only = namespace_only
+
+        if not isinstance(length_check, bool):
+            raise TypeError(f"`length_check` must be of type bool, not {type(length_check)}.")
+        self.length_check = length_check
 
         # Process 'content'. If 'None', initialize an empty OrderedDict
         if content is None:
@@ -82,7 +91,7 @@ class TabularFile:
             )
 
         # All values in 'content' must have the same length.
-        if len(content) > 0 and len(set([len(_) for _ in content.values()])) != 1:
+        if self.length_check and len(content) > 0 and len(set([len(_) for _ in content.values()])) != 1:
             raise IndexError(
                 "arrays in 'content' have varying lengths: {0}".format(
                     [len(_) for _ in content.values()]
@@ -216,6 +225,18 @@ class TabularFile:
             # Read the whole file in from stdin.
             delimiter = None
             lines = sys.stdin.readlines()
+        elif path_filename.suffix == ".json":
+            with open(path_filename, "r") as stream:
+                json_data = json.load(stream)
+            if not isinstance(json_data, dict):
+                raise TypeError(f"JSON data must be a dict, not {type(json_data)}.")
+            return cls(
+                content=OrderedDict(json_data),
+                alias=alias,
+                name=str(filename),
+                namespace_only=True,
+                length_check=False,
+            )
         else:
             # If .csv then comma-separated, otherwise whitespace-delimited
             delimiter = "," if path_filename.suffix.lower() == ".csv" else None

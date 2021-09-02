@@ -597,6 +597,8 @@ def cat_control(*, list_of_data, args):
     # If no arguments are given, include every column without checking for ambiguities
     if len(args) == 0:
         for dat in list_of_data:
+            if dat.namespace_only:
+                continue
             for column_header in dat.content.keys():
                 args.append(column_header)
 
