@@ -25,6 +25,7 @@ TODO
 """
 import sys
 import json
+import pprint
 import keyword
 import pathlib
 import numpy as np
@@ -117,11 +118,15 @@ class TabularFile:
         header index starts at 1, not 0.
         """
 
-        header = f"{'col':>4s} | {'length':>6s} | {'header':<s}"
-        print(header)
-        print("-" * len(header))
-        for idx, key in enumerate(self.content.keys()):
-            print(f"{idx: 4d} | {len(self.content[key]): 6d} | {key:s}")
+        try:
+            lines = [f"{'col':>4s} | {'length':>6s} | {'header':<s}"]
+            lines.append("-" * len(header))
+            for idx, key in enumerate(self.content.keys()):
+                lines.append(f"{idx: 4d} | {len(self.content[key]): 6d} | {key:s}")
+            print("\n".join(lines))
+        except:
+            pp = pprint.PrettyPrinter(indent=4)
+            pp.pprint(dict(self.content))
 
     def basic_list_headers(self):
         """
