@@ -69,11 +69,15 @@ def test_initialize_TabularFile_with_alias(content_1):
     assert tabularfile.content == content_1
 
 
-def test_initialize_TabularFile_with_bad_alias(content_1):
+@pytest.mark.parametrize("bad_alias", [3.14, ".foo", "fizz.buzz", "1baz", "hello*world", ""])
+def test_initialize_TabularFile_with_bad_alias(content_1, bad_alias):
     """ TabularFile initialization with bad alias - not str. """
-    alias = 3.14
-    with pytest.raises(TypeError):
-        thresh.TabularFile(content=content_1, alias=alias)
+    if isinstance(bad_alias, str):
+        with pytest.raises(SyntaxError):
+            thresh.TabularFile(content=content_1, alias=bad_alias)
+    else:
+        with pytest.raises(TypeError):
+            thresh.TabularFile(content=content_1, alias=bad_alias)
 
 
 def test_initialize_TabularFile_with_bad_content_1():

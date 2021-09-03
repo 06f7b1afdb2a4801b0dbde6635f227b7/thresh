@@ -25,6 +25,7 @@ TODO
 """
 import sys
 import json
+import keyword
 import pathlib
 import numpy as np
 from collections import OrderedDict
@@ -67,6 +68,16 @@ class TabularFile:
             raise TypeError(
                 "Variable 'alias' is not of type str or None: {0}".format(type(alias))
             )
+        if isinstance(alias, str):
+            if keyword.iskeyword(alias):
+                raise SyntaxError(
+                    "Alias can not be a python keyword. Got: {0}".format(repr(alias))
+                )
+            if not alias.isidentifier():
+                raise SyntaxError(
+                    "Alias must be a valid python identifier. Got: {0}".format(repr(alias))
+                )
+
         self.alias = alias
 
         # Process 'name'. Must be either 'str' or 'None'
