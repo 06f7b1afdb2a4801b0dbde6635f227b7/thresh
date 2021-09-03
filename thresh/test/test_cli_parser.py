@@ -19,10 +19,22 @@ db_gather = [
         "aliases": [None],
     },
     {
-        "name": "aliased stdin",
+        "name": "single char aliased stdin",
         "args": "b=-",
         "filenames": ["-"],
         "aliases": ["b"],
+    },
+    {
+        "name": "multi char aliased stdin",
+        "args": "gold=-",
+        "filenames": ["-"],
+        "aliases": ["gold"],
+    },
+    {
+        "name": "multi char aliased csv stdin",
+        "args": "gold=-.csv",
+        "filenames": ["-.csv"],
+        "aliases": ["gold"],
     },
 
 ]

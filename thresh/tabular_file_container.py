@@ -205,11 +205,7 @@ class TabularFile:
 
         # Convert the filename to a Path if it isn't already.
         if isinstance(filename, str):
-            if filename == "-":
-                # This actually means "read from stdin".
-                path_filename = filename
-            else:
-                path_filename = pathlib.Path(filename)
+            path_filename = pathlib.Path(filename)
         elif isinstance(filename, pathlib.Path):
             path_filename = filename
         else:
@@ -221,13 +217,12 @@ class TabularFile:
         if alias is not None and not isinstance(alias, str):
             raise TypeError(f"Argument 'alias' must be None or str, not {type(alias)}")
 
-        if path_filename == "-":
-            # Read the whole file in from stdin.
-            delimiter = None
-            lines = sys.stdin.readlines()
-        elif path_filename.suffix == ".json":
-            with open(path_filename, "r") as stream:
-                json_data = json.load(stream)
+        if path_filename.suffix.lower() == ".json":
+            if str(path_filename).lower() == "-.json":
+                json_data = json.load(sys.stdin)
+            else:
+                with open(path_filename, "r") as stream:
+                    json_data = json.load(stream)
             if not isinstance(json_data, dict):
                 raise TypeError(f"JSON data must be a dict, not {type(json_data)}.")
             return cls(
@@ -237,13 +232,24 @@ class TabularFile:
                 namespace_only=True,
                 length_check=False,
             )
-        else:
-            # If .csv then comma-separated, otherwise whitespace-delimited
-            delimiter = "," if path_filename.suffix.lower() == ".csv" else None
 
-            # Read the whole file in.
-            with path_filename.open() as fobj:
-                lines = fobj.readlines()
+        elif path_filename.suffix.lower() == ".csv":
+            # Comma delimited text
+            delimiter = ","
+            if str(path_filename).lower() == "-.csv":
+                lines = sys.stdin.readlines()
+            else:
+                with path_filename.open() as fobj:
+                    lines = fobj.readlines()
+
+        else:
+            # whitespace delimited text.
+            delimiter = None
+            if str(path_filename) == "-":
+                lines = sys.stdin.readlines()
+            else:
+                with path_filename.open() as fobj:
+                    lines = fobj.readlines()
 
         lines = cls.format_if_history_file(lines)
         head = lines[0].rstrip().split(delimiter)

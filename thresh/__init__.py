@@ -370,16 +370,21 @@ def parse_args(args_in):
 
         # Task creation.
         if task == "gather":
-            if pathlib.Path(arg).is_file() or arg == "-":
+            tentative_success = False
+            if pathlib.Path(arg).is_file() or arg == "-" or arg.startswith("-."):
+                # This catches the plain filename case, the stdin case
+                # without suffix, and the stdin case with suffix.
                 instructions[stage].append(Gather(filename=arg, alias=None))
-            elif (
-                arg[0].isalpha()
-                and arg[1] == "="
-                and (pathlib.Path(arg[2:]).is_file() or arg[2:] == "-")
-            ):
-                instructions[stage].append(Gather(filename=arg[2:], alias=arg[0]))
-            else:
-                raise FileNotFoundError(f"File not found: {arg}")
+                tentative_success = True
+            elif "=" in arg:
+                # We are probably dealing with an alias.
+                alias, arg = arg.split("=", 1)
+                if pathlib.Path(arg).is_file() or arg == "-" or arg.startswith("-."):
+                    instructions[stage].append(Gather(filename=arg, alias=alias))
+                    tentative_success = True
+
+            if not tentative_success:
+                raise FileNotFoundError(f"File not found or alias incorrectly formatted: {arg}")
 
         elif task == "cat":
             instructions[stage].append(arg)

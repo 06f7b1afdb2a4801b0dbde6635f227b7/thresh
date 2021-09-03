@@ -5,7 +5,9 @@ of the python environment. They also check things that
 probably don't need any checking.
 """
 
+import io
 import sys
+import json
 import itertools
 import pathlib
 from collections import OrderedDict
@@ -218,4 +220,89 @@ def test_populate_namespace(capsys, thresh_files, args):
     print("err", err)
     assert "Evaluated to True" in err
     assert "Evaluated to False" not in err
+    assert retcode == 0
+
+
+
+def test_json_load1(capsys, thresh_files):
+    """ Test the ability to load json files. """
+
+    with open("data.json", "w") as stream:
+        json.dump({"approx_pi": 3.0}, stream)
+
+    args = ["data.json", "assert", "approx_pi == 3.0"]
+    retcode = thresh.main(args)
+    out, err = capsys.readouterr()
+    assert "Evaluated to True" in err
+    assert not "Evaluated to False" in err
+    assert retcode == 0
+
+
+def test_json_load2(capsys, thresh_files):
+    """ Test the ability to load json files to aliases. """
+
+    with open("data.json", "w") as stream:
+        json.dump({"approx_pi": 3.0}, stream)
+
+    args = ["JSON_=data.json", "assert", "JSON_approx_pi == 3.0"]
+    retcode = thresh.main(args)
+    out, err = capsys.readouterr()
+    assert "Evaluated to True" in err
+    assert not "Evaluated to False" in err
+    assert retcode == 0
+
+
+########################################################################
+############################### STDIN ##################################
+########################################################################
+
+@pytest.mark.parametrize('arg', ["-.json", "-.Json", "-.JSon", "-.jsoN", "-.JSON"])
+@pytest.mark.parametrize('alias', ["foo", "bar2", "_", None])
+def test_stdin_json(capsys, monkeypatch, alias, arg):
+    """ Test the ability to load json files from stdin. """
+
+    monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps({"approx_pi": 3.0})))
+
+    if alias is None:
+        args = [arg, "assert", "approx_pi == 3.0"]
+    else:
+        args = [alias + "=" + arg, "assert", alias + "approx_pi == 3.0"]
+    retcode = thresh.main(args)
+    out, err = capsys.readouterr()
+    assert "Evaluated to True" in err
+    assert not "Evaluated to False" in err
+    assert retcode == 0
+
+@pytest.mark.parametrize('arg', ["-.csv", "-.Csv", "-.CSv", "-.csV", "-.CSV"])
+@pytest.mark.parametrize('alias', ["foo", "bar2", "_", None])
+def test_stdin_csv(capsys, monkeypatch, alias, arg):
+    """ Test the ability to load csv files from stdin. """
+
+    monkeypatch.setattr('sys.stdin', io.StringIO("a,b\n1,3\n2,4"))
+
+    if alias is None:
+        args = [arg, "assert", "sum(a + b) == 10.0"]
+    else:
+        args = [alias + "=" + arg, "assert", f"sum({alias}a + {alias}b) == 10.0"]
+    retcode = thresh.main(args)
+    out, err = capsys.readouterr()
+    assert "Evaluated to True" in err
+    assert not "Evaluated to False" in err
+    assert retcode == 0
+
+@pytest.mark.parametrize('arg', ["-"])
+@pytest.mark.parametrize('alias', ["foo", "bar2", "_", None])
+def test_stdin_text(capsys, monkeypatch, alias, arg):
+    """ Test the ability to load whitespace delimited text files from stdin. """
+
+    monkeypatch.setattr('sys.stdin', io.StringIO("a b\n1 3\n2 4"))
+
+    if alias is None:
+        args = [arg, "assert", "sum(a + b) == 10.0"]
+    else:
+        args = [alias + "=" + arg, "assert", f"sum({alias}a + {alias}b) == 10.0"]
+    retcode = thresh.main(args)
+    out, err = capsys.readouterr()
+    assert "Evaluated to True" in err
+    assert not "Evaluated to False" in err
     assert retcode == 0
