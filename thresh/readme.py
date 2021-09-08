@@ -195,15 +195,18 @@ new column to create another column.
 ### Creating New Files With No Input File
 
 Create a new file that with numbers and their squares.
+
     thresh cat 't=arange(1,6,1)' 'squares=t**2'
-       t  squares
-       1        1
-       2        4
-       3        9
-       4       16
-       5       25
+    WARNING: No files to read in.
+                             t                   squares
+      +1.00000000000000000e+00  +1.00000000000000000e+00
+      +2.00000000000000000e+00  +4.00000000000000000e+00
+      +3.00000000000000000e+00  +9.00000000000000000e+00
+      +4.00000000000000000e+00  +1.60000000000000000e+01
+      +5.00000000000000000e+00  +2.50000000000000000e+01
 
 Create a new file that has a sine wave and a noisy sine wave.
+
     thresh cat \
       't=linspace(0.0,pi,100)' \
       'sine=sin(t)' \
@@ -264,21 +267,21 @@ CSV output to foo.csv
 
     thresh data_1.txt output foo.csv
 
-### Manipulating columns with special characters
+### Using columns with special characters
 
 Some column names will have special characters that would make the
-column name invalid in python syntax. The work-around requires that the
-file in question is aliased. The column is accessed in this manner:
+column name invalid in python syntax. The unaliased bad name can be
+used for including the whole column but cannot be used in calculations.
 
-```bash
-$ thresh A=data.txt cat "good_name=__aliases['A']['-bad_name%']" assert "max(good_name) > 1"
-```
+    thresh data.txt cat "-bad_name%"
 
-Notes:
-* While columns with special names may be accessed this way, they
-  cannot be assigned in this way.
-* This is only available in the 'cat' section and not in the 'assert'
-  section. If you wish to access a "bad" column for assert, give it
-  a "good" name in the 'cat' section and use that name in the assert
-  section.
+The work-around for using the column in a calculation (cat or assert)
+requires that the file in question be aliased and then accessed via
+the special `__aliases` dictionary:
+
+    thresh foo_=data.txt assert \
+      "max(__aliases['foo_']['-bad_name%']) > 1"
+
+Note: While columns with special names may be accessed this way, they
+cannot be assigned in this way.
 """
