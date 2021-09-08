@@ -226,6 +226,10 @@ Do a simple assert on the data.
 
     thresh data_1.txt assert "abs(max(a)-6.0) < 1.0e-6"
 
+Do an assert on data in a JSON file.
+
+    thresh data.json assert "foo == 123"
+
 Do a less simple assert
 
     thresh data_1.txt \
