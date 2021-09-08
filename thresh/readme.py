@@ -40,21 +40,29 @@ See what columns are in a file in human-readable format:
 
 Print column names, one per line (useful for bash for-loops):
 
-    thresh data_1.txt headerlist
+    thresh data_2.csv headerlist
 
-Cat only the columns 'time' and 'stress':
+Print to stdout only the columns 'time' and 'stress':
 
     thresh data_1.txt cat time stress
 
-Read in from stdin:
+Print to stdout only the columns 'time' and 'stress' in CSV format:
+
+    thresh data_1.txt cat time stress print .csv
+
+Save to CSV format only the columns 'time' and 'stress':
+
+    thresh data_1.txt cat time stress output data_out.csv
+
+Read in from stdin (use `-.csv` for CSV format):
 
     cat data_1.txt | thresh - cat time stress
 
-Add a millisecond column 'mtime':
+Print the whole file and add a millisecond column called 'mtime':
 
     thresh fizz_=data_1.txt cat fizz_ 'mtime=1000*time'
 
-Cat the whole file, minus column 'stress':
+Print the whole file, minus column 'stress':
 
     thresh A=data_1.txt cat A stress=None
 
@@ -142,7 +150,7 @@ file has a column named 't' and you try to alias a file to 't', you
 won't get an error unless you try to use the 't' descriptor.
 
 
-### Extracting Columns
+### Extracting Columns with 'cat'
 
 These are all equivalent and print all the columns.
 
@@ -211,43 +219,53 @@ okay. The returned value is cast to a boolean and the program terminates
 with a return code of 0 if it evaluates to True and 1 if it evaluates to
 False.
 
-```bash
-# Do a simple assert on the data.
-$ thresh data_1.txt \
-  cat 'stress_rate=np.diff(stress)/np.diff(time)' \
-  assert 'np.max(np.abs(stress_rate)) < 2.0'
+Do a simple assert on the data.
 
-# Use multiple asserts.
-$ thresh data_1.txt \
-  cat 'stress_rate=np.diff(stress)/np.diff(time)' \
-  assert \
-    'np.max(np.abs(stress_rate)) < 2.0' \
-    'np.all(strain >= 0)'
+    thresh data_1.txt assert "abs(max(a)-6.0) < 1.0e-6"
 
-# Use a compound statement.
-$ thresh data_1.txt \
-  cat 'stress_rate=np.diff(stress)/np.diff(time)' \
-  assert 'np.max(np.abs(stress_rate)) < 2.0 and np.all(strain >= 0)'
-```
+Do a less simple assert
+
+    thresh data_1.txt \
+        cat 'stress_rate=np.diff(stress)/np.diff(time)' \
+        assert 'np.max(np.abs(stress_rate)) < 2.0'
+
+Use multiple asserts (all asserts must pass for 0 return code).
+
+    thresh data_1.txt \
+        cat 'stress_rate=np.diff(stress)/np.diff(time)' \
+        assert \
+            'np.max(np.abs(stress_rate)) < 2.0' \
+            'np.all(strain >= 0)'
+
+Use a compound statement.
+
+    thresh data_1.txt \
+        cat 'stress_rate=np.diff(stress)/np.diff(time)' \
+        assert 'np.max(np.abs(stress_rate)) < 2.0 or np.all(strain >= 0)'
+
 
 ### Saving output
-Several different output formats are supported:
 
-```bash
-# Regular whitespace-delimited otuput to stdout
-$ thresh data_1.txt print
+Several different output formats are supported.
 
-# CSV output to stdout
-$ thresh data_1.txt print .csv
+Regular whitespace-delimited otuput to stdout:
 
-# Regular whitespace-delimited otuput to foo.txt
-$ thresh data_1.txt output foo.txt
+    thresh data_1.txt print
 
-# CSV output to foo.csv
-$ thresh data_1.txt output foo.csv
-```
+CSV output to stdout
+
+    thresh data_1.txt print .csv
+
+Regular whitespace-delimited otuput to foo.txt
+
+    thresh data_1.txt output foo.txt
+
+CSV output to foo.csv
+
+    thresh data_1.txt output foo.csv
 
 ### Manipulating columns with special characters
+
 Some column names will have special characters that would make the
 column name invalid in python syntax. The work-around requires that the
 file in question is aliased. The column is accessed in this manner:

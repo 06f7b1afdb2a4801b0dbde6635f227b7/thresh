@@ -78,6 +78,14 @@ def tabularfile_3():
         content=copy.deepcopy(obj_content_3), alias="tabularfile_3"
     )
 
+@pytest.fixture
+def jsonfile_1():
+    """ A JSON File object """
+    return thresh.TabularFile(
+        content=OrderedDict({"bar": 4, "foo": 3}), alias="JSON_", length_check=False, namespace_only=True
+    )
+
+
 
 @pytest.fixture
 def thresh_files(tmpdir_factory):

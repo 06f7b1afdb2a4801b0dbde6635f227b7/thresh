@@ -115,6 +115,15 @@ def test_list_headers_default(capsys, tabularfile_2):
 """
     assert err == ""
 
+def test_list_headers_json(capsys, jsonfile_1):
+    """ Check the default behavior of the list_headers() function. """
+    jsonfile_1.list_headers()
+    out, err = capsys.readouterr()
+    assert out == """name | type\n-----------\n bar |  int\n foo |  int\n"""
+    assert err == ""
+
+
+
 #
 #  TabularFile.basic_list_headers()
 #

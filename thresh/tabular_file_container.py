@@ -120,13 +120,20 @@ class TabularFile:
 
         try:
             lines = [f"{'col':>4s} | {'length':>6s} | {'header':<s}"]
-            lines.append("-" * len(header))
+            lines.append("-" * len(lines[0]))
             for idx, key in enumerate(self.content.keys()):
                 lines.append(f"{idx: 4d} | {len(self.content[key]): 6d} | {key:s}")
-            print("\n".join(lines))
-        except:
-            pp = pprint.PrettyPrinter(indent=4)
-            pp.pprint(dict(self.content))
+        except Exception as exc:
+
+            obj_types = [[str(key), type(val).__name__] for key, val in self.content.items()]
+            header_len = max([len(_[0]) for _ in obj_types]) + 1
+            type_len = max([len(_[1]) for _ in obj_types]) + 1
+
+            lines = [f"{'name':>{header_len}s} | {'type':>{type_len}s}"]
+            lines.append("-" * len(lines[0]))
+            for key, val in obj_types:
+                lines.append(f"{key:>{header_len}s} | {val:>{type_len}s}")
+        print("\n".join(lines))
 
     def basic_list_headers(self):
         """
@@ -143,6 +150,9 @@ class TabularFile:
         text. This allows easy uniform printing to the terminal
         or to a file.
         """
+
+        if not self.length_check:
+            return json.dumps(dict(self.content))
 
         # Requres 17 digits to prefectly re-create a double in-memory.
         n_chars_decimal = 17
