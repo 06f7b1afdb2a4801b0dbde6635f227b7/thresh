@@ -355,7 +355,10 @@ def cat_control(*, list_of_data, args):
             if dat.namespace_only:
                 continue
             for column_header in dat.content.keys():
-                args.append(column_header)
+                if column_header in unique_columns:
+                    args.append(column_header)
+                if dat.alias is not None and f"{dat.alias}{column_header}" in unique_columns:
+                    args.append(dat.alias + column_header)
 
     output = OrderedDict()
     for arg in args:

@@ -222,6 +222,25 @@ def test_populate_namespace(capsys, thresh_files, args):
     assert "Evaluated to False" not in err
     assert retcode == 0
 
+def test_populate_namespace2(capsys, thresh_files):
+    """ Test to make sure we auto-populate the namespace if you don't name anything """
+
+    args = [
+        "A="+str(thresh_files["pass_a.txt"]),
+        "B="+str(thresh_files["pass_a.txt"]),
+        "assert",
+        "True",
+    ]
+    retcode = thresh.main(args)
+    out, err = capsys.readouterr()
+    print("retcode", retcode)
+    print("out", out)
+    print("err", err)
+    assert "Evaluated to True" in err
+    assert "Evaluated to False" not in err
+    assert retcode == 0
+
+
 
 
 def test_json_load1(capsys, thresh_files):
